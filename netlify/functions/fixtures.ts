@@ -1,5 +1,7 @@
-import type { Config } from "@netlify/functions";
-import { getStore } from "@netlify/blobs";
+import type { Config, Context } from "@netlify/functions";
+import { applyAdminUpdate } from "./_shared/calendar.js";
+import { syncCalendar } from "./_shared/sync-calendar.ts";
+import { getFixtureStore } from "./_shared/store.ts";
 
 const EMPTY = { fixtures: [], updatedAt: null };
 const headers = { "Content-Type": "application/json", "Cache-Control": "no-store" };
@@ -7,8 +9,8 @@ const SESSION_COOKIE = "fixtures_admin";
 const SESSION_SECONDS = 60 * 60 * 24 * 30;
 const json = (body: unknown, status = 200, extraHeaders: Record<string, string> = {}) => new Response(JSON.stringify(body), { status, headers: { ...headers, ...extraHeaders } });
 
-export default async (req: Request) => {
-  const store = getStore({ name: "fixtures", consistency: "strong" });
+export default async (req: Request, context: Context) => {
+  const store = getFixtureStore(context);
   if (req.method === "GET") return json((await store.get("current", { type: "json" })) || EMPTY);
 
   const expected = Netlify.env.get("ADMIN_PASSWORD");
@@ -18,6 +20,10 @@ export default async (req: Request) => {
   const passwordAuthorised = Boolean(expected && supplied === expected);
   if (!passwordAuthorised && !cookieAuthorised) return json({ error: "Unauthorised" }, 401);
   if (req.method === "POST") {
+    if (new URL(req.url).searchParams.get("action") === "sync") {
+      try { return json(await syncCalendar(context)); }
+      catch (error) { return json({ error: error instanceof Error ? error.message : "Calendar sync failed" }, 502); }
+    }
     const token = await createSession(expected!);
     return json({ ok: true }, 200, { "Set-Cookie": sessionCookie(token) });
   }
@@ -27,7 +33,8 @@ export default async (req: Request) => {
     if (!Array.isArray(body.fixtures) || body.fixtures.length > 100) return json({ error: "Invalid fixture data" }, 400);
     const fixtures = body.fixtures.map(validateFixture);
     if (fixtures.filter(f => f.pinned).length > 1) return json({ error: "Only one fixture can be pinned" }, 400);
-    const saved = { fixtures, updatedAt: new Date().toISOString() };
+    const current = (await store.get("current", { type: "json" })) || EMPTY;
+    const saved = applyAdminUpdate(current, fixtures);
     await store.setJSON("current", saved);
     return json(saved);
   } catch (error) { return json({ error: error instanceof Error ? error.message : "Invalid request" }, 400); }

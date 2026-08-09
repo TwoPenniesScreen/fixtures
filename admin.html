@@ -9,9 +9,9 @@
 </head>
 <body class="admin-page">
   <div id="admin-shell" hidden>
-    <header class="admin-header"><div><p class="eyebrow">Two Pennies</p><h1>Fixture Admin</h1></div><div class="admin-actions"><button id="lock" class="secondary">Lock admin</button><button id="add" class="primary">Add fixture</button></div></header>
+    <header class="admin-header"><div><p class="eyebrow">Two Pennies</p><h1>Fixture Admin</h1></div><div class="admin-actions"><button id="sync" class="secondary">Sync TV calendar</button><button id="lock" class="secondary">Lock admin</button><button id="add" class="primary">Add fixture</button></div></header>
     <main class="admin-grid">
-      <section class="panel"><div class="panel-heading"><h2>Fixtures</h2><span id="save-state"></span></div><div id="fixture-list" class="fixture-list"></div></section>
+      <section class="panel"><div class="panel-heading"><h2>Fixtures</h2><span id="save-state"></span></div><p id="calendar-state" class="calendar-state"></p><div id="fixture-list" class="fixture-list"></div></section>
       <section class="panel preview-panel"><div class="panel-heading"><h2>Screen preview</h2><span>16:9</span></div><div class="preview-frame"><div id="preview" class="fixture-screen"></div></div></section>
     </main>
   </div>
@@ -23,6 +23,7 @@
       <div class="form-row"><label>Date<input name="date" type="date" required></label><label>Kick-off<input name="time" type="time"><small>Leave blank for TBC</small></label></div>
       <div class="form-row"><label>Venue<select name="venue"><option value="home">Home</option><option value="away">Away</option></select></label><label>Competition<select name="competition"><option value="premier-league">Premier League</option><option value="champions-league">Champions League</option><option value="europa-league">Europa League</option><option value="conference-league">Conference League</option><option value="fa-cup">FA Cup</option><option value="league-cup">Carabao Cup</option><option value="efl">EFL</option><option value="uefa-super-cup">UEFA Super Cup</option><option value="club-world-cup">Club World Cup</option><option value="other">Other (no logo)</option></select></label></div>
       <label class="check"><input name="hidden" type="checkbox"> Hide this fixture from the screen</label>
+      <p id="calendar-note" class="calendar-note" hidden>Imported from your TV calendar. Hiding it or making a correction here will survive future calendar updates.</p>
       <div class="dialog-actions"><button type="button" id="delete" class="danger">Delete</button><span></span><button type="button" id="cancel">Cancel</button><button class="primary" value="save">Save fixture</button></div>
     </form>
   </dialog>

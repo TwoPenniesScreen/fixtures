@@ -11,13 +11,15 @@ const login = $("#login");
 const shell = $("#admin-shell");
 
 async function request(method = "GET", body) {
-  const response = await fetch("/api/fixtures", {
+  const action = method === "POST" && body?.action ? `?action=${encodeURIComponent(body.action)}` : "";
+  const payload = body?.action ? undefined : body;
+  const response = await fetch(`/api/fixtures${action}`, {
     method,
     headers: {
       "Content-Type": "application/json",
       ...(password ? { "X-Admin-Password": password } : {})
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: payload ? JSON.stringify(payload) : undefined,
     cache: "no-store"
   });
   if (response.status === 401) throw new Error("UNAUTHORISED");
@@ -35,7 +37,9 @@ async function load() { data = await request(); draw(); }
 function draw() {
   const list = $("#fixture-list");
   const sorted = [...data.fixtures].sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
-  list.innerHTML = sorted.length ? sorted.map(f => `<article class="admin-fixture ${f.hidden ? "is-hidden" : ""}"><button class="fixture-edit" data-edit="${escapeHtml(f.id)}"><span class="admin-date">${escapeHtml(f.date)} · ${escapeHtml(f.time || "TBC")}</span><strong>${escapeHtml(f.venue === "away" ? f.opponent + " v Newcastle" : "Newcastle v " + f.opponent)}</strong><small>${escapeHtml(f.competition.replaceAll("-", " "))}${f.hidden ? " · hidden" : ""}</small></button><button class="pin ${f.pinned ? "active" : ""}" data-pin="${escapeHtml(f.id)}" title="${f.pinned ? "Unpin" : "Feature this fixture"}" aria-label="${f.pinned ? "Unpin" : "Feature"} ${escapeHtml(f.opponent)}">★</button></article>`).join("") : `<div class="empty"><p>No fixtures yet.</p><button class="primary" data-add>Add the first fixture</button></div>`;
+  list.innerHTML = sorted.length ? sorted.map(f => `<article class="admin-fixture ${f.hidden ? "is-hidden" : ""}"><button class="fixture-edit" data-edit="${escapeHtml(f.id)}"><span class="admin-date">${escapeHtml(f.date)} · ${escapeHtml(f.time || "TBC")}${f.source === "calendar" ? " · TV calendar" : ""}</span><strong>${escapeHtml(f.venue === "away" ? f.opponent + " v Newcastle" : "Newcastle v " + f.opponent)}</strong><small>${escapeHtml(f.competition.replaceAll("-", " "))}${f.hidden ? " · hidden from screen" : ""}</small></button><button class="pin ${f.pinned ? "active" : ""}" data-pin="${escapeHtml(f.id)}" title="${f.pinned ? "Unpin" : "Feature this fixture"}" aria-label="${f.pinned ? "Unpin" : "Feature"} ${escapeHtml(f.opponent)}">★</button></article>`).join("") : `<div class="empty"><p>No fixtures yet.</p><button class="primary" data-add>Add the first fixture</button></div>`;
+  const synced = data.calendar?.lastSyncedAt ? new Date(data.calendar.lastSyncedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : "not synced yet";
+  $("#calendar-state").textContent = `TV calendar: ${synced}`;
   renderScreen($("#preview"), data);
 }
 
@@ -55,6 +59,7 @@ function openEditor(fixture = {}) {
     else form.elements[key].value = value;
   }
   $("#delete").hidden = !fixture.id;
+  $("#calendar-note").hidden = fixture.source !== "calendar";
   editor.showModal();
 }
 
@@ -91,6 +96,22 @@ async function save(next) {
 }
 
 $("#add").onclick = () => openEditor();
+$("#sync").onclick = async event => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  button.textContent = "Syncing…";
+  try {
+    data = await request("POST", { action: "sync" });
+    $("#save-state").textContent = "Calendar synced";
+    draw();
+  } catch (error) {
+    if (error.message === "UNAUTHORISED") return showLogin(() => button.click());
+    alert(error.message);
+  } finally {
+    button.disabled = false;
+    button.textContent = "Sync TV calendar";
+  }
+};
 $("#lock").onclick = () => lockAdmin();
 $("#fixture-list").onclick = async event => {
   const add = event.target.closest("[data-add]");
@@ -119,8 +140,10 @@ form.addEventListener("submit", async event => {
 });
 
 $("#delete").onclick = async () => {
-  if (!confirm("Delete this fixture?")) return;
   const id = form.elements.id.value;
+  const fixture = data.fixtures.find(value => value.id === id);
+  const message = fixture?.source === "calendar" ? "Delete this imported fixture permanently? Use ‘Hide this fixture’ if you may want it back later." : "Delete this fixture?";
+  if (!confirm(message)) return;
   editor.close();
   await save({ ...data, fixtures: data.fixtures.filter(f => f.id !== id) });
 };
