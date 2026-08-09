@@ -1,1 +1,29 @@
-m«ëˆ§½©buªàºg§µ§fŠxmšU,j›jÇºà7an{¦Š)ßŠW¨¢ë_ŠW›n·š‘ºÞjG§r‡^v‹­¦ën¦)í¢X§zÊ•éà¶î˜7]yÊy×œ¡×¢ž›­†¥¥Ø¬¦V²¶¬™ë,j¢Šzn¶)éº×â•ç^}«¥µú+²×bžŠ.¶›­¢ëiº×â•ç^}«¥µú+²×hº
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fixture Admin â€” Two Pennies</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="admin-page">
+  <header class="admin-header"><div><p class="eyebrow">Two Pennies</p><h1>Fixture Admin</h1></div><button id="add" class="primary">Add fixture</button></header>
+  <main class="admin-grid">
+    <section class="panel"><div class="panel-heading"><h2>Fixtures</h2><span id="save-state"></span></div><div id="fixture-list" class="fixture-list"></div></section>
+    <section class="panel preview-panel"><div class="panel-heading"><h2>Screen preview</h2><span>16:9</span></div><div class="preview-frame"><div id="preview" class="fixture-screen"></div></div></section>
+  </main>
+  <dialog id="editor">
+    <form id="fixture-form" method="dialog">
+      <div class="dialog-heading"><h2 id="editor-title">Add fixture</h2><button type="button" id="close" class="icon-button" aria-label="Close">Ã—</button></div>
+      <input type="hidden" name="id">
+      <label>Opponent<input name="opponent" required autocomplete="off"></label>
+      <div class="form-row"><label>Date<input name="date" type="date" required></label><label>Kick-off<input name="time" type="time"><small>Leave blank for TBC</small></label></div>
+      <div class="form-row"><label>Venue<select name="venue"><option value="home">Home</option><option value="away">Away</option></select></label><label>Competition<select name="competition"><option value="premier-league">Premier League</option><option value="champions-league">Champions League</option><option value="fa-cup">FA Cup</option><option value="league-cup">League Cup</option><option value="other">Other</option></select></label></div>
+      <label class="check"><input name="hidden" type="checkbox"> Hide this fixture from the screen</label>
+      <div class="dialog-actions"><button type="button" id="delete" class="danger">Delete</button><span></span><button type="button" id="cancel">Cancel</button><button class="primary" value="save">Save fixture</button></div>
+    </form>
+  </dialog>
+  <dialog id="login"><form id="login-form" method="dialog"><h2>Admin password</h2><p>Enter the password configured in Netlify.</p><label>Password<input name="password" type="password" required autofocus></label><p id="login-error" class="error"></p><button class="primary" value="login">Unlock admin</button></form></dialog>
+  <script type="module" src="/admin.js"></script>
+</body>
+</html>
