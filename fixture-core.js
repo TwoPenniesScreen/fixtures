@@ -1,5 +1,17 @@
 export const FALLBACK_DATA = { fixtures: [], updatedAt: null };
 
+const COMPETITION_LOGOS = {
+  "premier-league": "/assets/competitions/premier-league.png",
+  "champions-league": "/assets/competitions/champions-league.png",
+  "europa-league": "/assets/competitions/europa-league.png",
+  "conference-league": "/assets/competitions/conference-league.png",
+  "fa-cup": "/assets/competitions/fa-cup.png",
+  "league-cup": "/assets/competitions/league-cup.png",
+  "efl": "/assets/competitions/efl.png",
+  "uefa-super-cup": "/assets/competitions/uefa-super-cup.png",
+  "club-world-cup": "/assets/competitions/club-world-cup.png"
+};
+
 export function tidyName(name = "") {
   const aliases = {
     "newcastle united": "NEWCASTLE", "newcastle united fc": "NEWCASTLE",
@@ -51,7 +63,12 @@ export function renderScreen(target, data, now = new Date()) {
 function fixtureMarkup(f, featured) {
   const teams = f.venue === "away" ? [tidyName(f.opponent), "NEWCASTLE"] : ["NEWCASTLE", tidyName(f.opponent)];
   const competition = escapeHtml(f.competition || "other");
-  return `<article class="fixture ${featured ? "fixture-featured" : "fixture-small"}"><div class="teams"><strong>${escapeHtml(teams[0])}</strong><b>V</b><strong>${escapeHtml(teams[1])}</strong></div><div class="competition competition-${competition}" aria-label="${escapeHtml(competition.replaceAll("-", " "))}"></div><time>${formatWhen(f)}</time></article>`;
+  return `<article class="fixture ${featured ? "fixture-featured" : "fixture-small"}"><div class="teams"><strong>${escapeHtml(teams[0])}</strong><b>V</b><strong>${escapeHtml(teams[1])}</strong></div><div class="competition competition-${competition}" aria-label="${escapeHtml(competition.replaceAll("-", " "))}">${competitionLogo(f.competition)}</div><time>${formatWhen(f)}</time></article>`;
+}
+
+function competitionLogo(competition) {
+  const src = COMPETITION_LOGOS[competition];
+  return src ? `<img class="competition-logo" src="${src}" alt="">` : "";
 }
 
 function escapeHtml(value) { const d = document.createElement("div"); d.textContent = value; return d.innerHTML; }

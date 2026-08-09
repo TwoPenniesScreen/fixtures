@@ -11,6 +11,7 @@ A fixed 16:9 Newcastle fixture display and private editing page for the Basement
 - Falls back to the approved clean Newcastle/Basement background when nothing is eligible. The separate supplied “Every Televised Toon Game” artwork can be restored once its original image asset is available.
 - Keeps a last-known-good browser copy if the data service is temporarily unavailable.
 - Provides add, edit, delete, hide, pin and live 16:9 preview controls at `/admin`.
+- Maps Premier League, UEFA competitions, FA Cup, Carabao Cup, EFL and Club World Cup selections to white transparent competition marks; `Other` remains a no-logo fallback.
 
 ## Netlify setup
 
@@ -26,4 +27,4 @@ Install dependencies, set `ADMIN_PASSWORD` in a local `.env`, then run `npm run 
 
 ## Artwork
 
-The approved clean 1920×1080 Newcastle/Basement artwork is included as the fixed display background. The competition-logo slot is reserved but intentionally empty until the approved transparent logo assets are available; the fixture data model already selects the correct slot.
+The approved clean 1920×1080 Newcastle/Basement artwork is included as the fixed display background. The supplied competition marks are cleaned into a transparent sprite sheet and cropped at render time without altering the stored fixture data.
