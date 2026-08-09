@@ -26,4 +26,4 @@ Install dependencies, set `ADMIN_PASSWORD` in a local `.env`, then run `npm run 
 
 ## Artwork
 
-The approved clean 1920×1080 Newcastle/Basement artwork is included as the fixed display background. Competition marks are lightweight monochrome CSS symbols in this first working version and can later be swapped for the approved transparent assets without changing the fixture data model.
+The approved clean 1920×1080 Newcastle/Basement artwork is included as the fixed display background. The competition-logo slot is reserved but intentionally empty until the approved transparent logo assets are available; the fixture data model already selects the correct slot.

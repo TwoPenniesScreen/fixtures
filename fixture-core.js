@@ -51,7 +51,7 @@ export function renderScreen(target, data, now = new Date()) {
 function fixtureMarkup(f, featured) {
   const teams = f.venue === "away" ? [tidyName(f.opponent), "NEWCASTLE"] : ["NEWCASTLE", tidyName(f.opponent)];
   const competition = escapeHtml(f.competition || "other");
-  return `<article class="fixture ${featured ? "fixture-featured" : "fixture-small"}"><div class="teams"><strong>${escapeHtml(teams[0])}</strong><b>V</b><strong>${escapeHtml(teams[1])}</strong></div><div class="competition competition-${competition}" aria-label="${escapeHtml(competition.replaceAll("-", " "))}"><span></span></div><time>${formatWhen(f)}</time></article>`;
+  return `<article class="fixture ${featured ? "fixture-featured" : "fixture-small"}"><div class="teams"><strong>${escapeHtml(teams[0])}</strong><b>V</b><strong>${escapeHtml(teams[1])}</strong></div><div class="competition competition-${competition}" aria-label="${escapeHtml(competition.replaceAll("-", " "))}"></div><time>${formatWhen(f)}</time></article>`;
 }
 
 function escapeHtml(value) { const d = document.createElement("div"); d.textContent = value; return d.innerHTML; }
