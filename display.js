@@ -4,6 +4,10 @@ const CACHE_KEY = "two-pennies-fixtures-v1";
 const target = document.querySelector("#display");
 const connection = document.querySelector("#connection");
 
+function readCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY)); } catch { return null; }
+}
+
 async function refresh() {
   let data;
   try {
@@ -13,11 +17,12 @@ async function refresh() {
     localStorage.setItem(CACHE_KEY, JSON.stringify(data));
     connection.hidden = true;
   } catch {
-    try { data = JSON.parse(localStorage.getItem(CACHE_KEY)) || FALLBACK_DATA; } catch { data = FALLBACK_DATA; }
+    data = readCache() || FALLBACK_DATA;
     connection.hidden = !(data.fixtures || []).length;
   }
   renderScreen(target, data);
 }
 
+renderScreen(target, readCache() || FALLBACK_DATA);
 refresh();
 setInterval(refresh, 60_000);
