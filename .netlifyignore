@@ -1,0 +1,9 @@
+.gitignore
+.netlify/
+README.md
+netlify/
+node_modules/
+package.json
+pnpm-lock.yaml
+test/
+work/
