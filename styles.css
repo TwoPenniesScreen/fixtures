@@ -5,7 +5,7 @@ body { margin:0; color:var(--ink); background:#050505; font-family:Arial, sans-s
 .display-page { width:100vw; height:100vh; overflow:hidden; display:grid; place-items:center; background:#000; }
 .display-page .fixture-screen { width:min(100vw, 177.7778vh); height:min(100vh, 56.25vw); }
 .fixture-screen { position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; container-type:inline-size; background:#000 url("/assets/background.jpg") center/100% 100% no-repeat; color:white; isolation:isolate; }
-.featured { position:absolute; left:51%; right:3.5%; top:3.2%; text-align:center; }
+.featured { position:absolute; left:51%; right:3.5%; top:10.7%; text-align:center; }
 .fixture { font-family:ImpactLocal,Impact,"Arial Narrow",sans-serif; text-align:center; text-transform:uppercase; }
 .teams { display:flex; flex-direction:column; align-items:center; }
 .teams strong { font-weight:400; line-height:.9; letter-spacing:.012em; }
@@ -20,7 +20,7 @@ body { margin:0; color:var(--ink); background:#050505; font-family:Arial, sans-s
 .competition-champions-league span { border-radius:50%; transform:none; clip-path:polygon(50% 0,61% 33%,98% 35%,69% 56%,79% 93%,50% 71%,21% 93%,31% 56%,2% 35%,39% 33%); background:white; border:0; }
 .competition-fa-cup span { transform:none; width:2.4cqw; border-radius:5% 5% 48% 48%; border-top:0; }
 .competition-other span { border-radius:50%; transform:none; }
-.upcoming { position:absolute; left:52%; right:3%; top:49%; height:15%; display:grid; gap:2%; align-items:start; justify-content:center; }
+.upcoming { position:absolute; left:52%; right:3%; top:56.5%; height:15%; display:grid; gap:2%; align-items:start; justify-content:center; }
 .upcoming.count-3 { grid-template-columns:repeat(3,1fr); }.upcoming.count-2 { grid-template-columns:repeat(2,30%); }.upcoming.count-1 { grid-template-columns:36%; }
 .fixture-small .teams strong { font-size:1.75cqw; }.fixture-small .teams b { font-size:1cqw; line-height:.9; }
 .fixture-small .competition { height:1.35cqw; margin:.15em auto .04em; }.fixture-small .competition span { width:1.2cqw; }
