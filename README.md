@@ -8,7 +8,7 @@ A fixed 16:9 Newcastle fixture display and private editing page for the Basement
 - A single pinned fixture becomes featured and is removed from the smaller list.
 - Timed fixtures remain until 45 minutes after kick-off; TBC fixtures remain through their date.
 - Hidden fixtures never appear.
-- Falls back to “Every Televised Toon Game” when nothing is eligible.
+- Falls back to the approved clean Newcastle/Basement background when nothing is eligible. The separate supplied “Every Televised Toon Game” artwork can be restored once its original image asset is available.
 - Keeps a last-known-good browser copy if the data service is temporarily unavailable.
 - Provides add, edit, delete, hide, pin and live 16:9 preview controls at `/admin`.
 

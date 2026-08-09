@@ -42,7 +42,7 @@ export function formatWhen(fixture) {
 export function renderScreen(target, data, now = new Date()) {
   const { featured, upcoming } = selectFixtures(data.fixtures || [], now);
   if (!featured) {
-    target.innerHTML = `<section class="fallback"><div class="fallback-mark">NUFC</div><p>EVERY TELEVISED</p><h1>TOON GAME</h1><span>LIVE IN THE BASEMENT</span></section>`;
+    target.innerHTML = "";
     return;
   }
   target.innerHTML = `<section class="featured">${fixtureMarkup(featured, true)}</section><section class="upcoming count-${upcoming.length}">${upcoming.map(f => fixtureMarkup(f, false)).join("")}</section>`;
