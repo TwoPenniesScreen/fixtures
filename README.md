@@ -27,4 +27,4 @@ Install dependencies, set `ADMIN_PASSWORD` in a local `.env`, then run `npm run 
 
 ## Artwork
 
-The approved clean 1920×1080 Newcastle/Basement artwork is included as the fixed display background. The supplied competition marks are cleaned into a transparent sprite sheet and cropped at render time without altering the stored fixture data.
+The approved clean 1920×1080 Newcastle/Basement artwork is included as the fixed display background. The supplied competition marks are cleaned and stored as individual transparent images without altering the stored fixture data.
