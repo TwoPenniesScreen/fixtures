@@ -1,4 +1,4 @@
-@font-face { font-family: ImpactLocal; src: local("Impact"); font-display: swap; }
+@font-face { font-family: RobotoDisplay; src:url("/assets/fonts/roboto-regular.woff2") format("woff2"); font-style:normal; font-weight:400; font-display:block; }
 :root { --ink:#fff; --gold:#d6b36b; --panel:#181818; --muted:#a5a5a5; }
 * { box-sizing: border-box; }
 body { margin:0; color:var(--ink); background:#050505; font-family:Arial, sans-serif; }
@@ -6,7 +6,7 @@ body { margin:0; color:var(--ink); background:#050505; font-family:Arial, sans-s
 .display-page .fixture-screen { width:min(100vw, 177.7778vh); height:min(100vh, 56.25vw); }
 .fixture-screen { position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; container-type:inline-size; background:#000 url("/assets/background.jpg") center/100% 100% no-repeat; color:white; isolation:isolate; }
 .featured { position:absolute; left:51%; right:3.5%; top:10.7%; text-align:center; }
-.fixture { font-family:ImpactLocal,Impact,"Arial Narrow",sans-serif; text-align:center; text-transform:uppercase; }
+.fixture { font-family:RobotoDisplay,Arial,sans-serif; text-align:center; text-transform:uppercase; }
 .teams { display:flex; flex-direction:column; align-items:center; }
 .teams strong { font-weight:400; line-height:.9; letter-spacing:.012em; }
 .teams b { font-weight:400; }
@@ -22,7 +22,7 @@ body { margin:0; color:var(--ink); background:#050505; font-family:Arial, sans-s
 .fixture-small .competition { height:2cqw; margin:.25cqw auto .18cqw; }
 .fixture-small .competition-logo { max-width:72%; height:2cqw; }
 .fixture-small time { font-size:1.05cqw; margin-top:.1em; }
-.fallback-message { position:absolute; left:51%; right:3.5%; top:32%; display:flex; flex-direction:column; align-items:center; font-family:ImpactLocal,Impact,"Arial Narrow",sans-serif; text-align:center; text-transform:uppercase; line-height:.9; }
+.fallback-message { position:absolute; left:51%; right:3.5%; top:32%; display:flex; flex-direction:column; align-items:center; font-family:RobotoDisplay,Arial,sans-serif; text-align:center; text-transform:uppercase; line-height:.9; }
 .fallback-message span { font-size:3.8cqw; letter-spacing:.025em; }
 .fallback-message strong { margin-top:.16em; font-size:6.2cqw; font-weight:400; letter-spacing:.018em; }
 .connection { position:fixed; left:16px; bottom:16px; background:#9b6200; padding:8px 12px; border-radius:4px; font-size:14px; }
