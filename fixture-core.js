@@ -52,12 +52,8 @@ export function selectFixtures(fixtures, now = new Date()) {
 }
 
 export function formatWhen(fixture) {
+  if (fixture.dateMode === "window" || !fixture.time) return "TBC";
   const date = new Date(`${fixture.date}T12:00:00`);
-  if (fixture.dateMode === "window") {
-    const windowStart = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(date).toUpperCase();
-    return `W/C ${windowStart} TBC`;
-  }
-  if (!fixture.time) return "TBC";
   const bits = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" }).format(date).replace(",", "").toUpperCase();
   return `${bits} ${fixture.time}`;
 }

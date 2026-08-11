@@ -15,11 +15,11 @@ test("keeps TBC fixtures until the end of their date but hides that date on scre
   assert.equal(eligibleFixtures([fixture], new Date("2026-08-09T22:00:00")).length, 1);
   assert.equal(formatWhen(fixture), "TBC");
 });
-test("keeps a playing-window fixture through its seven-day window", () => {
+test("keeps a playing-window fixture through its seven-day window but displays only TBC", () => {
   const fixture = f("one", "2026-08-24", "", { dateMode: "window" });
   assert.equal(eligibleFixtures([fixture], new Date("2026-08-30T23:59:59")).length, 1);
   assert.equal(eligibleFixtures([fixture], new Date("2026-08-31T00:00:00")).length, 0);
-  assert.equal(formatWhen(fixture), "W/C 24 AUG TBC");
+  assert.equal(formatWhen(fixture), "TBC");
 });
 test("pin becomes featured and is not duplicated below", () => { const all=[f("a","2026-09-01","15:00"),f("b","2026-09-02","15:00",{pinned:true}),f("c","2026-09-03","15:00")]; const r=selectFixtures(all,new Date("2026-08-01")); assert.equal(r.featured.id,"b"); assert.deepEqual(r.upcoming.map(x=>x.id),["a","c"]); });
 test("hidden fixtures are excluded", () => assert.equal(selectFixtures([f("a","2026-09-01","15:00",{hidden:true})],new Date("2026-08-01")).featured,null));
