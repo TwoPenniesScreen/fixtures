@@ -7,7 +7,7 @@ const COMPETITION_LOGOS = {
   "conference-league": "/assets/competitions/conference-league.png",
   "fa-cup": "/assets/competitions/fa-cup.png",
   "league-cup": "/assets/competitions/league-cup.png",
-  "efl": "/assets/competitions/efl.png",
+  "efl": "/assets/competitions/league-cup.png",
   "uefa-super-cup": "/assets/competitions/uefa-super-cup.png",
   "club-world-cup": "/assets/competitions/club-world-cup.png"
 };
@@ -57,8 +57,9 @@ export function formatWhen(fixture) {
     const windowStart = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(date).toUpperCase();
     return `W/C ${windowStart} TBC`;
   }
+  if (!fixture.time) return "TBC";
   const bits = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" }).format(date).replace(",", "").toUpperCase();
-  return `${bits} ${fixture.time || "TBC"}`;
+  return `${bits} ${fixture.time}`;
 }
 
 export function renderScreen(target, data, now = new Date()) {

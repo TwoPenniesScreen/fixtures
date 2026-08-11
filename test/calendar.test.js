@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { applyAdminUpdate, mergeCalendarData, parseCalendar } from "../netlify/functions/_shared/calendar.js";
+import { applyAdminUpdate, mergeCalendarData, normaliseFixtureData, parseCalendar } from "../netlify/functions/_shared/calendar.js";
 
 const ICS = `BEGIN:VCALENDAR\r
 BEGIN:VEVENT\r
@@ -25,6 +25,15 @@ test("parses only Newcastle fixtures from the subscribed TV calendar", () => {
   assert.equal(events.length, 2);
   assert.deepEqual(events[0].defaults, { opponent: "Everton", date: "2026-08-12", time: "17:15", dateMode: "exact", competition: "other", venue: "away" });
   assert.equal(events[1].defaults.competition, "premier-league");
+});
+
+test("treats EFL labels and legacy records as Carabao Cup", () => {
+  const events = parseCalendar(ICS.replace("Friendly", "EFL Cup"));
+  assert.equal(events[0].defaults.competition, "league-cup");
+  const data = normaliseFixtureData({ fixtures: [{ id: "legacy", competition: "efl", calendarDefaults: { competition: "efl" }, manualOverrides: { competition: "efl" } }] });
+  assert.equal(data.fixtures[0].competition, "league-cup");
+  assert.equal(data.fixtures[0].calendarDefaults.competition, "league-cup");
+  assert.equal(data.fixtures[0].manualOverrides.competition, "league-cup");
 });
 
 test("first sync adopts matching manual fixtures and adds new TV games", () => {

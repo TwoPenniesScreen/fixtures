@@ -37,8 +37,9 @@ function parseEvent(block) {
 }
 
 export function mergeCalendarData(current = {}, events = [], now = new Date()) {
-  const currentFixtures = Array.isArray(current.fixtures) ? current.fixtures : [];
-  const ignored = new Set(Array.isArray(current.ignoredCalendarUids) ? current.ignoredCalendarUids : []);
+  const normalisedCurrent = normaliseFixtureData(current);
+  const currentFixtures = normalisedCurrent.fixtures;
+  const ignored = new Set(Array.isArray(normalisedCurrent.ignoredCalendarUids) ? normalisedCurrent.ignoredCalendarUids : []);
   const matchedIds = new Set();
   const imported = [];
 
@@ -82,7 +83,8 @@ export function mergeCalendarData(current = {}, events = [], now = new Date()) {
 }
 
 export function applyAdminUpdate(current = {}, fixtures = [], now = new Date()) {
-  const existingFixtures = Array.isArray(current.fixtures) ? current.fixtures : [];
+  const normalisedCurrent = normaliseFixtureData(current);
+  const existingFixtures = normalisedCurrent.fixtures;
   const existingById = new Map(existingFixtures.map(fixture => [fixture.id, fixture]));
   const submittedIds = new Set(fixtures.map(fixture => fixture.id));
   const ignored = new Set(Array.isArray(current.ignoredCalendarUids) ? current.ignoredCalendarUids : []);
@@ -109,7 +111,7 @@ export function applyAdminUpdate(current = {}, fixtures = [], now = new Date()) 
   });
 
   return {
-    ...current,
+    ...normalisedCurrent,
     fixtures: updated,
     ignoredCalendarUids: [...ignored],
     updatedAt: now.toISOString()
@@ -147,8 +149,26 @@ function competitionKey(value) {
   if (name.includes("carabao") || name.includes("league cup") || name.includes("efl cup")) return "league-cup";
   if (name.includes("uefa super cup")) return "uefa-super-cup";
   if (name.includes("club world cup")) return "club-world-cup";
-  if (name === "efl" || name.includes("football league")) return "efl";
+  if (name === "efl" || name.includes("football league")) return "league-cup";
   return "other";
+}
+
+export function normaliseCompetitionKey(value) {
+  return value === "efl" ? "league-cup" : value;
+}
+
+export function normaliseFixtureData(current = {}) {
+  const fixtures = Array.isArray(current.fixtures) ? current.fixtures.map(fixture => {
+    if (!fixture || typeof fixture !== "object") return fixture;
+    const calendarDefaults = fixture.calendarDefaults && typeof fixture.calendarDefaults === "object"
+      ? { ...fixture.calendarDefaults, competition: normaliseCompetitionKey(fixture.calendarDefaults.competition) }
+      : fixture.calendarDefaults;
+    const manualOverrides = fixture.manualOverrides && typeof fixture.manualOverrides === "object" && Object.hasOwn(fixture.manualOverrides, "competition")
+      ? { ...fixture.manualOverrides, competition: normaliseCompetitionKey(fixture.manualOverrides.competition) }
+      : fixture.manualOverrides;
+    return { ...fixture, competition: normaliseCompetitionKey(fixture.competition), calendarDefaults, manualOverrides };
+  }) : [];
+  return { ...current, fixtures };
 }
 
 function sameFixture(fixture, defaults) {

@@ -14,7 +14,7 @@ A fixed 16:9 Newcastle fixture display and private editing page for the Basement
 - Imports televised Newcastle fixtures from a private Live Football On TV calendar each day, with an on-demand sync button in the admin.
 - Keeps imported hide/pin choices and manual corrections when the calendar changes; deleting an imported fixture suppresses it from later syncs.
 - Keeps a successful admin login active on that device for 30 days using a signed, secure, HTTP-only cookie; “Lock admin” clears it immediately.
-- Maps Premier League, UEFA competitions, FA Cup, Carabao Cup, EFL and Club World Cup selections to white transparent competition marks; `Other` remains a no-logo fallback.
+- Maps Premier League, UEFA competitions, FA Cup, Carabao Cup and Club World Cup selections to white transparent competition marks; `Other` remains a no-logo fallback.
 
 ## Netlify setup
 

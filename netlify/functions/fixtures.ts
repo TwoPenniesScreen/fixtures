@@ -1,5 +1,5 @@
 import type { Config, Context } from "@netlify/functions";
-import { applyAdminUpdate } from "./_shared/calendar.js";
+import { applyAdminUpdate, normaliseCompetitionKey, normaliseFixtureData } from "./_shared/calendar.js";
 import { syncCalendar } from "./_shared/sync-calendar.ts";
 import { getFixtureStore } from "./_shared/store.ts";
 
@@ -11,7 +11,7 @@ const json = (body: unknown, status = 200, extraHeaders: Record<string, string> 
 
 export default async (req: Request, context: Context) => {
   const store = getFixtureStore(context);
-  if (req.method === "GET") return json((await store.get("current", { type: "json" })) || EMPTY);
+  if (req.method === "GET") return json(normaliseFixtureData((await store.get("current", { type: "json" })) || EMPTY));
 
   const expected = Netlify.env.get("ADMIN_PASSWORD");
   if (req.method === "DELETE") return json({ ok: true }, 200, { "Set-Cookie": clearSessionCookie() });
@@ -43,10 +43,11 @@ export default async (req: Request, context: Context) => {
 function validateFixture(value: any) {
   if (!value || typeof value !== "object") throw new Error("Invalid fixture");
   const text = (key: string, max = 80) => { const v = String(value[key] || "").trim(); if (v.length > max) throw new Error(`${key} is too long`); return v; };
-  const id = text("id", 80), opponent = text("opponent"), date = text("date", 10), suppliedTime = text("time", 5), competition = text("competition", 40) || "other";
+  const id = text("id", 80), opponent = text("opponent"), date = text("date", 10), suppliedTime = text("time", 5);
+  const competition = normaliseCompetitionKey(text("competition", 40) || "other");
   const dateMode = value.dateMode === "window" ? "window" : "exact";
   const time = dateMode === "window" ? "" : suppliedTime;
-  const allowedCompetitions = new Set(["premier-league", "champions-league", "europa-league", "conference-league", "fa-cup", "league-cup", "efl", "uefa-super-cup", "club-world-cup", "other"]);
+  const allowedCompetitions = new Set(["premier-league", "champions-league", "europa-league", "conference-league", "fa-cup", "league-cup", "uefa-super-cup", "club-world-cup", "other"]);
   const parsedDate = new Date(`${date}T00:00:00Z`);
   const validDate = /^\d{4}-\d{2}-\d{2}$/.test(date) && !Number.isNaN(parsedDate.valueOf()) && parsedDate.toISOString().slice(0, 10) === date;
   if (!id || !opponent || !validDate || (time && !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time)) || !allowedCompetitions.has(competition)) throw new Error("A fixture is missing or contains invalid information");
