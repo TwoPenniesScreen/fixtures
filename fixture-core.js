@@ -19,7 +19,8 @@ export function tidyName(name = "") {
     "afc bournemouth": "BOURNEMOUTH", "brighton and hove albion": "BRIGHTON",
     "brighton & hove albion": "BRIGHTON", "wolverhampton wanderers": "WOLVES",
     "manchester united": "MAN UTD", "manchester city": "MAN CITY",
-    "nottingham forest": "NOTT'M FOREST", "west ham united": "WEST HAM"
+    "nottingham forest": "NOTT'M FOREST", "west ham united": "WEST HAM",
+    "west bromwich albion": "WEST BROM", "west bromwich albion fc": "WEST BROM"
   };
   const clean = String(name).trim().replace(/\s+fc$/i, "").replace(/\s+/g, " ");
   return (aliases[clean.toLowerCase()] || clean).toUpperCase();

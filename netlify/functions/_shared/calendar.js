@@ -136,7 +136,8 @@ function isNewcastle(value) {
 }
 
 function normaliseTeam(value) {
-  return cleanTeam(value).toLowerCase().replace(/\b(?:afc|fc)\b/g, "").replace(/\bunited\b/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  const normalised = cleanTeam(value).toLowerCase().replace(/\b(?:afc|fc)\b/g, "").replace(/\bunited\b/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  return normalised === "west bromwich albion" ? "west brom" : normalised;
 }
 
 function competitionKey(value) {

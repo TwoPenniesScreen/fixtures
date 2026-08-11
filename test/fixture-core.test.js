@@ -23,6 +23,6 @@ test("keeps a playing-window fixture through its seven-day window but displays o
 });
 test("pin becomes featured and is not duplicated below", () => { const all=[f("a","2026-09-01","15:00"),f("b","2026-09-02","15:00",{pinned:true}),f("c","2026-09-03","15:00")]; const r=selectFixtures(all,new Date("2026-08-01")); assert.equal(r.featured.id,"b"); assert.deepEqual(r.upcoming.map(x=>x.id),["a","c"]); });
 test("hidden fixtures are excluded", () => assert.equal(selectFixtures([f("a","2026-09-01","15:00",{hidden:true})],new Date("2026-08-01")).featured,null));
-test("tidyName follows the live-score shortening philosophy", () => { assert.equal(tidyName("Newcastle United FC"),"NEWCASTLE"); assert.equal(tidyName("Tottenham Hotspur"),"TOTTENHAM"); });
+test("tidyName follows the live-score shortening philosophy", () => { assert.equal(tidyName("Newcastle United FC"),"NEWCASTLE"); assert.equal(tidyName("Tottenham Hotspur"),"TOTTENHAM"); assert.equal(tidyName("West Bromwich Albion FC"),"WEST BROM"); });
 test("no eligible fixtures renders the televised-games fallback", () => { const target={innerHTML:""}; renderScreen(target,{fixtures:[]},new Date("2026-08-01")); assert.match(target.innerHTML,/EVERY TELEVISED/); assert.match(target.innerHTML,/TOON GAME/); });
 test("legacy EFL cache entries use the Carabao Cup artwork", () => { const target={innerHTML:""}; renderScreen(target,{fixtures:[f("one","2026-09-01","15:00",{competition:"efl"})]},new Date("2026-08-01")); assert.match(target.innerHTML,/assets\/competitions\/league-cup\.png/); });

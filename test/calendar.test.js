@@ -60,6 +60,16 @@ test("a confirmed calendar fixture replaces its provisional playing window", () 
   assert.equal(liverpool.source, "calendar");
 });
 
+test("West Bromwich Albion replaces a provisional West Brom playing window", () => {
+  const westBromIcs = ICS.replace("Liverpool - Premier League", "West Bromwich Albion - EFL Cup");
+  const current = { fixtures: [{ id: "window", opponent: "West Brom", date: "2026-08-17", time: "", dateMode: "window", competition: "league-cup", venue: "home", hidden: false, pinned: false }] };
+  const saved = mergeCalendarData(current, parseCalendar(westBromIcs));
+  const westBrom = saved.fixtures.find(fixture => fixture.opponent === "West Bromwich Albion");
+  assert.equal(saved.fixtures.filter(fixture => /west brom/i.test(fixture.opponent)).length, 1);
+  assert.equal(westBrom.id, "window");
+  assert.equal(westBrom.dateMode, "exact");
+});
+
 test("first sync replaces an old opponent typo instead of making a duplicate", () => {
   const bournemouthIcs = ICS.replace("Liverpool - Premier League", "AFC Bournemouth - Premier League");
   const current = { fixtures: [{ id: "old", opponent: "BOURNMOUTH", date: "2026-08-23", time: "16:30", competition: "premier-league", venue: "home", hidden: false, pinned: false }] };
