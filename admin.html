@@ -20,7 +20,8 @@
       <div class="dialog-heading"><h2 id="editor-title">Add fixture</h2><button type="button" id="close" class="icon-button" aria-label="Close">×</button></div>
       <input type="hidden" name="id">
       <label>Opponent<input name="opponent" required autocomplete="off"></label>
-      <div class="form-row"><label>Date<input name="date" type="date" required></label><label>Kick-off<input name="time" type="time"><small>Leave blank for TBC</small></label></div>
+      <label>Schedule status<select name="dateMode"><option value="exact">Exact date</option><option value="window">Playing window (date and time TBC)</option></select></label>
+      <div class="form-row"><label><span id="date-caption">Date</span><input name="date" type="date" required><small id="date-help">Confirmed match date</small></label><label>Kick-off<input name="time" type="time"><small id="time-help">Leave blank for TBC</small></label></div>
       <div class="form-row"><label>Venue<select name="venue"><option value="home">Home</option><option value="away">Away</option></select></label><label>Competition<select name="competition"><option value="premier-league">Premier League</option><option value="champions-league">Champions League</option><option value="europa-league">Europa League</option><option value="conference-league">Conference League</option><option value="fa-cup">FA Cup</option><option value="league-cup">Carabao Cup</option><option value="efl">EFL</option><option value="uefa-super-cup">UEFA Super Cup</option><option value="club-world-cup">Club World Cup</option><option value="other">Other (no logo)</option></select></label></div>
       <label class="check"><input name="hidden" type="checkbox"> Hide this fixture from the screen</label>
       <p id="calendar-note" class="calendar-note" hidden>Imported from your TV calendar. Hiding it or making a correction here will survive future calendar updates.</p>

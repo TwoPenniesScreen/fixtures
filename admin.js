@@ -37,7 +37,7 @@ async function load() { data = await request(); draw(); }
 function draw() {
   const list = $("#fixture-list");
   const sorted = [...data.fixtures].sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
-  list.innerHTML = sorted.length ? sorted.map(f => `<article class="admin-fixture ${f.hidden ? "is-hidden" : ""}"><button class="fixture-edit" data-edit="${escapeHtml(f.id)}"><span class="admin-date">${escapeHtml(f.date)} · ${escapeHtml(f.time || "TBC")}${f.source === "calendar" ? " · TV calendar" : ""}</span><strong>${escapeHtml(f.venue === "away" ? f.opponent + " v Newcastle" : "Newcastle v " + f.opponent)}</strong><small>${escapeHtml(f.competition.replaceAll("-", " "))}${f.hidden ? " · hidden from screen" : ""}</small></button><button class="pin ${f.pinned ? "active" : ""}" data-pin="${escapeHtml(f.id)}" title="${f.pinned ? "Unpin" : "Feature this fixture"}" aria-label="${f.pinned ? "Unpin" : "Feature"} ${escapeHtml(f.opponent)}">★</button></article>`).join("") : `<div class="empty"><p>No fixtures yet.</p><button class="primary" data-add>Add the first fixture</button></div>`;
+  list.innerHTML = sorted.length ? sorted.map(f => `<article class="admin-fixture ${f.hidden ? "is-hidden" : ""}"><button class="fixture-edit" data-edit="${escapeHtml(f.id)}"><span class="admin-date">${escapeHtml(adminWhen(f))}${f.source === "calendar" ? " · TV calendar" : ""}</span><strong>${escapeHtml(f.venue === "away" ? f.opponent + " v Newcastle" : "Newcastle v " + f.opponent)}</strong><small>${escapeHtml(f.competition.replaceAll("-", " "))}${f.hidden ? " · hidden from screen" : ""}</small></button><button class="pin ${f.pinned ? "active" : ""}" data-pin="${escapeHtml(f.id)}" title="${f.pinned ? "Unpin" : "Feature this fixture"}" aria-label="${f.pinned ? "Unpin" : "Feature"} ${escapeHtml(f.opponent)}">★</button></article>`).join("") : `<div class="empty"><p>No fixtures yet.</p><button class="primary" data-add>Add the first fixture</button></div>`;
   const synced = data.calendar?.lastSyncedAt ? new Date(data.calendar.lastSyncedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : "not synced yet";
   $("#calendar-state").textContent = `TV calendar: ${synced}`;
   renderScreen($("#preview"), data);
@@ -49,6 +49,22 @@ function escapeHtml(value) {
   return element.innerHTML;
 }
 
+function adminWhen(fixture) {
+  if (fixture.dateMode !== "window") return `${fixture.date} · ${fixture.time || "TBC"}`;
+  const date = new Date(`${fixture.date}T12:00:00`);
+  const label = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(date);
+  return `W/C ${label} · date and time TBC`;
+}
+
+function updateScheduleFields() {
+  const isWindow = form.elements.dateMode.value === "window";
+  $("#date-caption").textContent = isWindow ? "Week commencing" : "Date";
+  $("#date-help").textContent = isWindow ? "First day of the playing window" : "Confirmed match date";
+  $("#time-help").textContent = isWindow ? "Not required for a playing window" : "Leave blank for TBC";
+  form.elements.time.disabled = isWindow;
+  if (isWindow) form.elements.time.value = "";
+}
+
 function openEditor(fixture = {}) {
   form.reset();
   form.elements.id.value = fixture.id || "";
@@ -58,6 +74,7 @@ function openEditor(fixture = {}) {
     if (form.elements[key].type === "checkbox") form.elements[key].checked = value;
     else form.elements[key].value = value;
   }
+  updateScheduleFields();
   $("#delete").hidden = !fixture.id;
   $("#calendar-note").hidden = fixture.source !== "calendar";
   editor.showModal();
@@ -96,6 +113,7 @@ async function save(next) {
 }
 
 $("#add").onclick = () => openEditor();
+form.elements.dateMode.addEventListener("change", updateScheduleFields);
 $("#sync").onclick = async event => {
   const button = event.currentTarget;
   button.disabled = true;
@@ -131,6 +149,8 @@ form.addEventListener("submit", async event => {
   if (event.submitter?.value !== "save") return;
   const values = Object.fromEntries(new FormData(form));
   values.hidden = form.elements.hidden.checked;
+  values.dateMode = form.elements.dateMode.value;
+  if (values.dateMode === "window") values.time = "";
   values.id ||= crypto.randomUUID();
   const existing = data.fixtures.find(f => f.id === values.id);
   values.pinned = existing?.pinned || false;

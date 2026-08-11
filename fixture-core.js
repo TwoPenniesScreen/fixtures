@@ -26,6 +26,7 @@ export function tidyName(name = "") {
 }
 
 export function kickoffOf(fixture) {
+  if (fixture.dateMode === "window") return new Date(`${fixture.date}T00:00:00`);
   const time = fixture.time || "23:59";
   return new Date(`${fixture.date}T${time}:00`);
 }
@@ -33,6 +34,11 @@ export function kickoffOf(fixture) {
 export function eligibleFixtures(fixtures, now = new Date()) {
   return fixtures.filter(f => {
     if (f.hidden || !f.date) return false;
+    if (f.dateMode === "window") {
+      const end = new Date(`${f.date}T00:00:00`);
+      end.setDate(end.getDate() + 7);
+      return end > now;
+    }
     if (!f.time) return new Date(`${f.date}T23:59:59`) >= now;
     return kickoffOf(f).getTime() + 45 * 60 * 1000 > now.getTime();
   }).sort((a, b) => kickoffOf(a) - kickoffOf(b));
@@ -47,6 +53,10 @@ export function selectFixtures(fixtures, now = new Date()) {
 
 export function formatWhen(fixture) {
   const date = new Date(`${fixture.date}T12:00:00`);
+  if (fixture.dateMode === "window") {
+    const windowStart = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(date).toUpperCase();
+    return `W/C ${windowStart} TBC`;
+  }
   const bits = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" }).format(date).replace(",", "").toUpperCase();
   return `${bits} ${fixture.time || "TBC"}`;
 }

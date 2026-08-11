@@ -23,7 +23,7 @@ END:VCALENDAR`;
 test("parses only Newcastle fixtures from the subscribed TV calendar", () => {
   const events = parseCalendar(ICS);
   assert.equal(events.length, 2);
-  assert.deepEqual(events[0].defaults, { opponent: "Everton", date: "2026-08-12", time: "17:15", competition: "other", venue: "away" });
+  assert.deepEqual(events[0].defaults, { opponent: "Everton", date: "2026-08-12", time: "17:15", dateMode: "exact", competition: "other", venue: "away" });
   assert.equal(events[1].defaults.competition, "premier-league");
 });
 
@@ -34,6 +34,20 @@ test("first sync adopts matching manual fixtures and adds new TV games", () => {
   const liverpool = saved.fixtures.find(fixture => fixture.opponent === "Liverpool");
   assert.equal(liverpool.id, "existing");
   assert.equal(liverpool.hidden, true);
+  assert.equal(liverpool.source, "calendar");
+});
+
+test("a confirmed calendar fixture replaces its provisional playing window", () => {
+  const current = { fixtures: [{ id: "window", opponent: "Liverpool", date: "2026-08-17", time: "", dateMode: "window", competition: "premier-league", venue: "away", hidden: false, pinned: true }] };
+  const saved = mergeCalendarData(current, parseCalendar(ICS));
+  const liverpool = saved.fixtures.find(fixture => fixture.opponent === "Liverpool");
+  assert.equal(saved.fixtures.filter(fixture => fixture.opponent === "Liverpool").length, 1);
+  assert.equal(liverpool.id, "window");
+  assert.equal(liverpool.dateMode, "exact");
+  assert.equal(liverpool.date, "2026-08-23");
+  assert.equal(liverpool.time, "16:30");
+  assert.equal(liverpool.venue, "home");
+  assert.equal(liverpool.pinned, true);
   assert.equal(liverpool.source, "calendar");
 });
 

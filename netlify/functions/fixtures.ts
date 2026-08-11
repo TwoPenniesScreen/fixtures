@@ -43,12 +43,14 @@ export default async (req: Request, context: Context) => {
 function validateFixture(value: any) {
   if (!value || typeof value !== "object") throw new Error("Invalid fixture");
   const text = (key: string, max = 80) => { const v = String(value[key] || "").trim(); if (v.length > max) throw new Error(`${key} is too long`); return v; };
-  const id = text("id", 80), opponent = text("opponent"), date = text("date", 10), time = text("time", 5), competition = text("competition", 40) || "other";
+  const id = text("id", 80), opponent = text("opponent"), date = text("date", 10), suppliedTime = text("time", 5), competition = text("competition", 40) || "other";
+  const dateMode = value.dateMode === "window" ? "window" : "exact";
+  const time = dateMode === "window" ? "" : suppliedTime;
   const allowedCompetitions = new Set(["premier-league", "champions-league", "europa-league", "conference-league", "fa-cup", "league-cup", "efl", "uefa-super-cup", "club-world-cup", "other"]);
   const parsedDate = new Date(`${date}T00:00:00Z`);
   const validDate = /^\d{4}-\d{2}-\d{2}$/.test(date) && !Number.isNaN(parsedDate.valueOf()) && parsedDate.toISOString().slice(0, 10) === date;
   if (!id || !opponent || !validDate || (time && !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time)) || !allowedCompetitions.has(competition)) throw new Error("A fixture is missing or contains invalid information");
-  return { id, opponent, date, time, competition, venue: value.venue === "away" ? "away" : "home", hidden: Boolean(value.hidden), pinned: Boolean(value.pinned) };
+  return { id, opponent, date, time, dateMode, competition, venue: value.venue === "away" ? "away" : "home", hidden: Boolean(value.hidden), pinned: Boolean(value.pinned) };
 }
 
 export const config: Config = { path: "/api/fixtures" };

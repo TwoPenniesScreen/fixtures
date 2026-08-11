@@ -1,4 +1,4 @@
-const FIXTURE_FIELDS = ["opponent", "date", "time", "competition", "venue"];
+const FIXTURE_FIELDS = ["opponent", "date", "time", "dateMode", "competition", "venue"];
 
 export function parseCalendar(ics) {
   const unfolded = String(ics).replace(/\r?\n[ \t]/g, "");
@@ -29,6 +29,7 @@ function parseEvent(block) {
       opponent: homeIsNewcastle ? away : home,
       date: `${dateText.slice(0, 4)}-${dateText.slice(4, 6)}-${dateText.slice(6, 8)}`,
       time: `${timeText.slice(0, 2)}:${timeText.slice(2, 4)}`,
+      dateMode: "exact",
       competition: competitionKey(unescapeIcs(match[3]).trim()),
       venue: homeIsNewcastle ? "home" : "away"
     }
@@ -45,6 +46,7 @@ export function mergeCalendarData(current = {}, events = [], now = new Date()) {
     if (ignored.has(event.uid)) continue;
     const existing = currentFixtures.find(fixture => fixture.calendarUid === event.uid)
       || currentFixtures.find(fixture => !matchedIds.has(fixture.id) && sameFixture(fixture, event.defaults))
+      || currentFixtures.find(fixture => !matchedIds.has(fixture.id) && samePlayingWindow(fixture, event.defaults))
       || currentFixtures.find(fixture => !matchedIds.has(fixture.id) && sameOpponentFixture(fixture, event.defaults));
     if (existing) matchedIds.add(existing.id);
     const overrides = existing?.manualOverrides && typeof existing.manualOverrides === "object" ? existing.manualOverrides : {};
@@ -160,6 +162,17 @@ function sameOpponentFixture(fixture, defaults) {
     && fixture.competition === defaults.competition
     && normaliseTeam(fixture.opponent) === normaliseTeam(defaults.opponent)
     && Math.abs(new Date(`${fixture.date}T12:00:00Z`) - new Date(`${defaults.date}T12:00:00Z`)) <= 14 * 24 * 60 * 60 * 1000;
+}
+
+function samePlayingWindow(fixture, defaults) {
+  if (fixture.dateMode !== "window"
+    || fixture.competition !== defaults.competition
+    || normaliseTeam(fixture.opponent) !== normaliseTeam(defaults.opponent)) return false;
+  const starts = new Date(`${fixture.date}T00:00:00Z`);
+  const ends = new Date(starts);
+  ends.setUTCDate(ends.getUTCDate() + 7);
+  const confirmed = new Date(`${defaults.date}T12:00:00Z`);
+  return confirmed >= starts && confirmed < ends;
 }
 
 function calendarId(uid) {
