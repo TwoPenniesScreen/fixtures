@@ -2,6 +2,7 @@ import type { Config, Context } from "@netlify/functions";
 import { applyAdminUpdate, normaliseCompetitionKey, normaliseFixtureData } from "./_shared/calendar.js";
 import { syncCalendar } from "./_shared/sync-calendar.ts";
 import { getFixtureStore } from "./_shared/store.ts";
+import { DEFAULT_OFFER, normaliseOffer, publicOffer, validateOffer } from "./_shared/offer.js";
 
 const EMPTY = { fixtures: [], updatedAt: null };
 const headers = { "Content-Type": "application/json", "Cache-Control": "no-store" };
@@ -11,7 +12,9 @@ const json = (body: unknown, status = 200, extraHeaders: Record<string, string> 
 
 export default async (req: Request, context: Context) => {
   const store = getFixtureStore(context);
-  if (req.method === "GET") return json(normaliseFixtureData((await store.get("current", { type: "json" })) || EMPTY));
+  const action = new URL(req.url).searchParams.get("action");
+  if (req.method === "GET" && action === "offer-public") return json(publicOffer((await store.get("offer", { type: "json" })) || DEFAULT_OFFER));
+  if (req.method === "GET" && !action) return json(normaliseFixtureData((await store.get("current", { type: "json" })) || EMPTY));
 
   const expected = Netlify.env.get("ADMIN_PASSWORD");
   if (req.method === "DELETE") return json({ ok: true }, 200, { "Set-Cookie": clearSessionCookie() });
@@ -19,8 +22,9 @@ export default async (req: Request, context: Context) => {
   const cookieAuthorised = expected ? await verifySession(readCookie(req, SESSION_COOKIE), expected) : false;
   const passwordAuthorised = Boolean(expected && supplied === expected);
   if (!passwordAuthorised && !cookieAuthorised) return json({ error: "Unauthorised" }, 401);
+  if (req.method === "GET" && action === "offer") return json(normaliseOffer((await store.get("offer", { type: "json" })) || DEFAULT_OFFER));
   if (req.method === "POST") {
-    if (new URL(req.url).searchParams.get("action") === "sync") {
+    if (action === "sync") {
       try { return json(await syncCalendar(context)); }
       catch (error) { return json({ error: error instanceof Error ? error.message : "Calendar sync failed" }, 502); }
     }
@@ -29,6 +33,11 @@ export default async (req: Request, context: Context) => {
   }
   if (req.method !== "PUT") return json({ error: "Method not allowed" }, 405);
   try {
+    if (action === "offer") {
+      const savedOffer = validateOffer(await req.json());
+      await store.setJSON("offer", savedOffer);
+      return json(savedOffer);
+    }
     const body = await req.json() as { fixtures?: unknown[] };
     if (!Array.isArray(body.fixtures) || body.fixtures.length > 100) return json({ error: "Invalid fixture data" }, 400);
     const fixtures = body.fixtures.map(validateFixture);

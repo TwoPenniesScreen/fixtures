@@ -1,7 +1,10 @@
 import { renderScreen } from "./fixture-core.js";
+import { fitOfferCanvas, normaliseOffer, renderOfferScreen } from "./offer-core.js";
 
 const $ = selector => document.querySelector(selector);
 let data = { fixtures: [], updatedAt: null };
+let offer = normaliseOffer();
+let offerPreviewMode = "normal";
 let password = "";
 let afterUnlock = null;
 
@@ -9,9 +12,11 @@ const editor = $("#editor");
 const form = $("#fixture-form");
 const login = $("#login");
 const shell = $("#admin-shell");
+fitOfferCanvas($("#offer-preview"), $("#offer-preview-frame"));
 
-async function request(method = "GET", body) {
-  const action = method === "POST" && body?.action ? `?action=${encodeURIComponent(body.action)}` : "";
+async function request(method = "GET", body, requestedAction = "") {
+  const actionName = method === "POST" && body?.action ? body.action : requestedAction;
+  const action = actionName ? `?action=${encodeURIComponent(actionName)}` : "";
   const payload = body?.action ? undefined : body;
   const response = await fetch(`/api/fixtures${action}`, {
     method,
@@ -32,7 +37,11 @@ async function verifyPassword(candidate = "") {
   try { await request("POST"); }
   finally { password = ""; }
 }
-async function load() { data = await request(); draw(); }
+async function load() {
+  [data, offer] = await Promise.all([request(), request("GET", undefined, "offer")]);
+  draw();
+  populateOfferForm();
+}
 
 function draw() {
   const list = $("#fixture-list");
@@ -41,6 +50,86 @@ function draw() {
   const synced = data.calendar?.lastSyncedAt ? new Date(data.calendar.lastSyncedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }) : "not synced yet";
   $("#calendar-state").textContent = `TV calendar: ${synced}`;
   renderScreen($("#preview"), data);
+  renderOfferPreview();
+}
+
+function populateOfferForm() {
+  const offerForm = $("#offer-form");
+  offerForm.elements.enabled.checked = offer.enabled;
+  offerForm.elements.price.value = offer.price;
+  offerForm.elements.drinkName.value = offer.drinkName;
+  offerForm.elements.terms.value = offer.terms;
+  offerForm.elements.beforeMinutes.value = offer.beforeMinutes;
+  offerForm.elements.afterMinutes.value = offer.afterMinutes;
+  renderOfferLogoBank();
+  renderOfferPreview();
+}
+
+function offerFromForm() {
+  const offerForm = $("#offer-form");
+  return normaliseOffer({
+    ...offer,
+    enabled: offerForm.elements.enabled.checked,
+    price: offerForm.elements.price.value,
+    drinkName: offerForm.elements.drinkName.value,
+    terms: offerForm.elements.terms.value,
+    beforeMinutes: offerForm.elements.beforeMinutes.value,
+    afterMinutes: offerForm.elements.afterMinutes.value
+  });
+}
+
+function renderOfferPreview() {
+  const target = $("#offer-preview");
+  if (!target) return;
+  const previewOffer = $("#offer-form") ? offerFromForm() : offer;
+  renderOfferScreen(target, data.fixtures, previewOffer, new Date(), offerPreviewMode);
+}
+
+function renderOfferLogoBank() {
+  const bank = $("#offer-logo-bank");
+  bank.replaceChildren();
+  for (const logo of offer.logos) {
+    const card = document.createElement("article");
+    card.className = `offer-logo-card ${logo.id === offer.selectedLogoId ? "active" : ""}`;
+    const choose = document.createElement("button");
+    choose.type = "button";
+    choose.className = "offer-logo-choice";
+    choose.dataset.logoSelect = logo.id;
+    choose.innerHTML = `<img alt=""><strong></strong><span>${logo.id === offer.selectedLogoId ? "Selected" : "Use this"}</span>`;
+    choose.querySelector("img").src = logo.src;
+    choose.querySelector("img").alt = logo.name;
+    choose.querySelector("strong").textContent = logo.name;
+    card.append(choose);
+    if (offer.logos.length > 1) {
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "offer-logo-remove";
+      remove.dataset.logoRemove = logo.id;
+      remove.textContent = "Remove";
+      card.append(remove);
+    }
+    bank.append(card);
+  }
+}
+
+async function readLogoFile(file) {
+  if (!file) throw new Error("Choose a logo image first.");
+  if (!/^image\/(png|webp|jpeg)$/.test(file.type)) throw new Error("Use a PNG, WebP or JPEG image.");
+  if (file.size > 750_000) throw new Error("Keep the logo under 750 KB.");
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("That image could not be read."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function logoId(name) {
+  const base = name.toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "drink";
+  let id = base;
+  let suffix = 2;
+  while (offer.logos.some(logo => logo.id === id)) id = `${base}-${suffix++}`;
+  return id;
 }
 
 function escapeHtml(value) {
@@ -167,6 +256,70 @@ $("#delete").onclick = async () => {
   editor.close();
   await save({ ...data, fixtures: data.fixtures.filter(f => f.id !== id) });
 };
+
+$("#offer-form").addEventListener("input", renderOfferPreview);
+$("#offer-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const state = $("#offer-save-state");
+  state.textContent = "Saving…";
+  try {
+    offer = await request("PUT", offerFromForm(), "offer");
+    populateOfferForm();
+    state.textContent = "Saved";
+  } catch (error) {
+    if (error.message === "UNAUTHORISED") return showLogin(() => form.requestSubmit());
+    state.textContent = "Not saved";
+    alert(error.message);
+  }
+});
+
+$("#offer-logo-bank").addEventListener("click", event => {
+  const choose = event.target.closest("[data-logo-select]");
+  if (choose) {
+    offer = normaliseOffer({ ...offerFromForm(), logos: offer.logos, selectedLogoId: choose.dataset.logoSelect });
+    renderOfferLogoBank();
+    renderOfferPreview();
+    return;
+  }
+  const remove = event.target.closest("[data-logo-remove]");
+  if (!remove || offer.logos.length < 2) return;
+  const logos = offer.logos.filter(logo => logo.id !== remove.dataset.logoRemove);
+  offer = normaliseOffer({ ...offerFromForm(), logos, selectedLogoId: offer.selectedLogoId === remove.dataset.logoRemove ? logos[0].id : offer.selectedLogoId });
+  renderOfferLogoBank();
+  renderOfferPreview();
+});
+
+$("#offer-add-logo").onclick = async () => {
+  const nameInput = $("#offer-logo-name");
+  const fileInput = $("#offer-logo-file");
+  const name = nameInput.value.trim();
+  if (!name) return alert("Give the drink logo a name.");
+  try {
+    const src = await readLogoFile(fileInput.files[0]);
+    const existing = offer.logos.find(logo => logo.name.toLowerCase() === name.toLowerCase());
+    if (!existing && offer.logos.length >= 12) throw new Error("The logo bank can hold up to 12 drinks.");
+    const id = existing?.id || logoId(name);
+    const logos = existing
+      ? offer.logos.map(logo => logo.id === id ? { id, name, src } : logo)
+      : [...offer.logos, { id, name, src }];
+    offer = normaliseOffer({ ...offerFromForm(), logos, selectedLogoId: id });
+    nameInput.value = "";
+    fileInput.value = "";
+    renderOfferLogoBank();
+    renderOfferPreview();
+  } catch (error) {
+    alert(error.message);
+  }
+};
+
+$("#offer-preview-toolbar").addEventListener("click", event => {
+  const button = event.target.closest("[data-offer-preview]");
+  if (!button) return;
+  offerPreviewMode = button.dataset.offerPreview;
+  for (const item of event.currentTarget.querySelectorAll("[data-offer-preview]")) item.classList.toggle("active", item === button);
+  renderOfferPreview();
+});
 
 login.addEventListener("cancel", event => event.preventDefault());
 $("#login-form").addEventListener("submit", async event => {

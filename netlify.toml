@@ -24,7 +24,24 @@
     Cache-Control = "no-store"
     X-Robots-Tag = "noindex, nofollow"
 
+[[headers]]
+  for = "/offer"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/offer.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    X-Robots-Tag = "noindex, nofollow"
+
 [[redirects]]
   from = "/admin"
   to = "/admin.html"
+  status = 200
+
+[[redirects]]
+  from = "/offer"
+  to = "/offer.html"
   status = 200

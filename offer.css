@@ -1,0 +1,75 @@
+@font-face {
+  font-family: RobotoDisplay;
+  src: url("/assets/fonts/roboto-regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+}
+
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; margin: 0; background: #000; }
+.offer-page { overflow: hidden; }
+.offer-stage { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+.offer-screen {
+  position: absolute;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  transform-origin: top left;
+  color: #fff;
+  background: #000 url("/assets/offer-background.jpg") center / 100% 100% no-repeat;
+  font-family: RobotoDisplay, Arial, sans-serif;
+}
+
+.offer-drink-logo {
+  position: absolute;
+  left: 150px;
+  bottom: 48px;
+  width: 660px;
+  height: 285px;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.offer-copy {
+  position: absolute;
+  left: 1025px;
+  top: 58px;
+  width: 825px;
+  height: 790px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  text-transform: uppercase;
+}
+.offer-copy p { margin: 0; }
+.offer-window { font-size: 47px; line-height: 1.42; font-weight: 700; letter-spacing: .01em; }
+.offer-window span { font-size: 42px; }
+.offer-price { margin-top: 34px !important; font-family: Georgia, serif; font-size: 145px; line-height: 1; font-weight: 700; }
+.offer-terms { margin-top: 32px !important; font-size: 44px; line-height: 1.05; font-weight: 700; }
+.offer-fixture { margin-top: 43px; width: 100%; line-height: 1.12; }
+.offer-fixture p { font-size: 38px; font-weight: 700; }
+.offer-fixture strong { display: block; margin-top: 9px; font-size: 42px; font-weight: 700; }
+.offer-fixture time { display: block; margin-top: 9px; font-size: 36px; font-weight: 700; }
+
+.offer-copy-active { justify-content: center; padding-bottom: 40px; }
+.offer-kicker { font-size: 58px; line-height: 1; font-weight: 700; }
+.offer-copy-active .offer-price { margin-top: 38px !important; font-size: 188px; }
+.offer-now { margin-top: 22px !important; font-size: 72px; line-height: 1; font-weight: 700; }
+.offer-copy-active .offer-fixture { margin-top: 62px; }
+.offer-copy-active .offer-fixture p { font-size: 36px; }
+.offer-copy-active .offer-fixture strong { font-size: 47px; }
+.offer-copy-active .offer-fixture time { font-size: 38px; }
+.offer-copy.without-fixture { justify-content: center; padding-bottom: 70px; }
+.offer-copy-normal.without-fixture .offer-window { margin-top: 0; }
+.offer-screen.is-disabled .offer-copy { display: none; }
+
+.offer-preview-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 15px 40px #000;
+}

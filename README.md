@@ -15,6 +15,9 @@ A fixed 16:9 Newcastle fixture display and private editing page for the Basement
 - Keeps imported hide/pin choices and manual corrections when the calendar changes; deleting an imported fixture suppresses it from later syncs.
 - Keeps a successful admin login active on that device for 30 days using a signed, secure, HTTP-only cookie; “Lock admin” clears it immediately.
 - Maps Premier League, UEFA competitions, FA Cup, Carabao Cup and Club World Cup selections to white transparent competition marks; `Other` remains a no-logo fallback.
+- Provides a separate fixed 1920×1080 matchday drinks screen at `/offer`, using the same fixture data without changing the main fixture display.
+- Lets the admin select or upload a drinks logo, change the price and wording, and set the exact pre/post-match offer window (105 minutes before and 210 minutes after kick-off by default).
+- Switches the offer locally at the exact cutoff, even between data refreshes. Hidden, date-window and TBC fixtures never trigger it.
 
 ## Netlify setup
 
