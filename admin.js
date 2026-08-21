@@ -57,7 +57,6 @@ function populateOfferForm() {
   const offerForm = $("#offer-form");
   offerForm.elements.enabled.checked = offer.enabled;
   offerForm.elements.price.value = offer.price;
-  offerForm.elements.drinkName.value = offer.drinkName;
   offerForm.elements.terms.value = offer.terms;
   offerForm.elements.beforeMinutes.value = offer.beforeMinutes;
   offerForm.elements.afterMinutes.value = offer.afterMinutes;
@@ -71,7 +70,6 @@ function offerFromForm() {
     ...offer,
     enabled: offerForm.elements.enabled.checked,
     price: offerForm.elements.price.value,
-    drinkName: offerForm.elements.drinkName.value,
     terms: offerForm.elements.terms.value,
     beforeMinutes: offerForm.elements.beforeMinutes.value,
     afterMinutes: offerForm.elements.afterMinutes.value

@@ -17,10 +17,11 @@ export function normaliseOffer(value = {}) {
     .filter(logo => logo.id && logo.name && logo.src);
   const requestedLogoId = String(value.selectedLogoId || "").trim();
   const selectedLogoId = logos.some(logo => logo.id === requestedLogoId) ? requestedLogoId : logos[0]?.id || "";
+  const selectedLogo = logos.find(logo => logo.id === selectedLogoId) || logos[0];
   return {
     enabled: value.enabled !== false,
     price: String(value.price || DEFAULT_OFFER.price).trim(),
-    drinkName: String(value.drinkName || DEFAULT_OFFER.drinkName).trim(),
+    drinkName: String(selectedLogo?.name || value.drinkName || DEFAULT_OFFER.drinkName).trim(),
     terms: String(value.terms || DEFAULT_OFFER.terms).trim(),
     beforeMinutes: finiteNumber(value.beforeMinutes, DEFAULT_OFFER.beforeMinutes),
     afterMinutes: finiteNumber(value.afterMinutes, DEFAULT_OFFER.afterMinutes),
@@ -81,6 +82,11 @@ export function formatOfferFixture(fixture) {
   return { teams: `${home} v ${away}`.toUpperCase(), when: when.toUpperCase() };
 }
 
+export function formatOfferPrice(offerValue = DEFAULT_OFFER) {
+  const offer = normaliseOffer(offerValue);
+  return `${offer.drinkName} ${offer.price}`.trim().toUpperCase();
+}
+
 export function renderOfferScreen(target, fixtures = [], offerValue = DEFAULT_OFFER, nowValue = new Date(), forcedMode = "") {
   const state = getOfferState(fixtures, offerValue, nowValue);
   const mode = forcedMode === "active" || forcedMode === "normal" ? forcedMode : state.mode;
@@ -92,7 +98,7 @@ export function renderOfferScreen(target, fixtures = [], offerValue = DEFAULT_OF
   target.classList.toggle("is-disabled", mode === "disabled");
   const logoImg = document.createElement("img");
   logoImg.className = "offer-drink-logo";
-  logoImg.alt = offer.drinkName;
+  logoImg.alt = logo?.name || offer.drinkName;
   if (logo?.src) logoImg.src = logo.src;
   logoImg.hidden = mode === "disabled" || !logo?.src;
   target.append(logoImg);
@@ -106,7 +112,7 @@ export function renderOfferScreen(target, fixtures = [], offerValue = DEFAULT_OF
     copy.innerHTML = `<p class="offer-window">2 HOURS BEFORE<br><span>TO</span><br>2 HOURS AFTER</p><p class="offer-price"></p><p class="offer-terms"></p>`;
     copy.querySelector(".offer-terms").textContent = offer.terms;
   }
-  copy.querySelector(".offer-price").textContent = offer.price;
+  copy.querySelector(".offer-price").textContent = formatOfferPrice(offer);
   if (fixture) {
     const details = document.createElement("div");
     details.className = "offer-fixture";

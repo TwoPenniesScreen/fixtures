@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { DEFAULT_OFFER, formatOfferFixture, getOfferState, selectOfferFixture } from "../offer-core.js";
+import { DEFAULT_OFFER, formatOfferFixture, formatOfferPrice, getOfferState, selectOfferFixture } from "../offer-core.js";
 
 const fixture = {
   id: "liv",
@@ -35,4 +35,18 @@ test("the next confirmed fixture is selected chronologically", () => {
 test("away fixtures use the display name philosophy", () => {
   const formatted = formatOfferFixture({ ...fixture, venue: "away", opponent: "Tottenham Hotspur" });
   assert.equal(formatted.teams, "TOTTENHAM V NEWCASTLE");
+});
+
+test("the displayed price follows the selected logo name", () => {
+  const offer = {
+    ...DEFAULT_OFFER,
+    price: "£4",
+    drinkName: "Old name",
+    selectedLogoId: "pravha",
+    logos: [
+      ...DEFAULT_OFFER.logos,
+      { id: "pravha", name: "Pravha", src: "/assets/drinks/pravha.png" }
+    ]
+  };
+  assert.equal(formatOfferPrice(offer), "PRAVHA £4");
 });
