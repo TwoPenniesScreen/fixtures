@@ -1,31 +1,54 @@
 import { DEFAULT_OFFER, fitOfferCanvas, getOfferState, normaliseOffer, renderOfferScreen } from "./offer-core.js";
+import { fetchWithTimeout } from "./fixture-core.js";
 
+const CACHE_KEY = "two-pennies-offer-display-v1";
 const frame = document.querySelector("#offer-frame");
 const screen = document.querySelector("#offer-screen");
-let fixtures = [];
-let offer = normaliseOffer(DEFAULT_OFFER);
+const cached = readCache();
+let fixtures = cached?.fixtures?.fixtures || [];
+let offer = normaliseOffer(cached?.offer || DEFAULT_OFFER);
 let lastSignature = "";
+let refreshPending = false;
 
 fitOfferCanvas(screen, frame);
 renderOfferScreen(screen, fixtures, offer, new Date());
 
 async function refresh() {
-  const [fixtureResult, offerResult] = await Promise.allSettled([
-    fetch("/api/fixtures", { cache: "no-store" }).then(response => {
-      if (!response.ok) throw new Error("Fixture request failed");
-      return response.json();
-    }),
-    fetch("/api/fixtures?action=offer-public", { cache: "no-store" }).then(response => {
-      if (!response.ok) throw new Error("Offer request failed");
-      return response.json();
-    })
-  ]);
-
-  if (fixtureResult.status === "fulfilled" && Array.isArray(fixtureResult.value.fixtures)) {
-    fixtures = fixtureResult.value.fixtures;
+  if (refreshPending) return;
+  refreshPending = true;
+  try {
+    const response = await fetchWithTimeout("/api/fixtures?action=display-public");
+    if (!response.ok) throw new Error("Display request failed");
+    const data = await response.json();
+    if (!isDisplayData(data)) throw new Error("Invalid display data");
+    fixtures = data.fixtures.fixtures;
+    offer = normaliseOffer(data.offer);
+    writeCache(data);
+  } catch {
+    // Keep the last successful in-memory or locally cached display state.
+  } finally {
+    refreshPending = false;
   }
-  if (offerResult.status === "fulfilled") offer = normaliseOffer(offerResult.value);
   paint(true);
+}
+
+function readCache() {
+  try {
+    const data = JSON.parse(localStorage.getItem(CACHE_KEY));
+    return isDisplayData(data) ? data : null;
+  } catch { return null; }
+}
+
+function writeCache(data) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
+}
+
+function isDisplayData(data) {
+  return Boolean(
+    data && typeof data === "object" &&
+    data.fixtures && typeof data.fixtures === "object" && Array.isArray(data.fixtures.fixtures) &&
+    data.offer && typeof data.offer === "object" && !Array.isArray(data.offer) && Array.isArray(data.offer.logos)
+  );
 }
 
 function paint(force = false) {

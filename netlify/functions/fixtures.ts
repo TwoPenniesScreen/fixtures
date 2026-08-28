@@ -6,6 +6,10 @@ import { DEFAULT_OFFER, normaliseOffer, publicOffer, validateOffer } from "./_sh
 
 const EMPTY = { fixtures: [], updatedAt: null };
 const headers = { "Content-Type": "application/json", "Cache-Control": "no-store" };
+const publicHeaders = {
+  "Cache-Control": "public, max-age=0, must-revalidate",
+  "Netlify-CDN-Cache-Control": "public, durable, max-age=60, must-revalidate"
+};
 const SESSION_COOKIE = "fixtures_admin";
 const SESSION_SECONDS = 60 * 60 * 24 * 30;
 const json = (body: unknown, status = 200, extraHeaders: Record<string, string> = {}) => new Response(JSON.stringify(body), { status, headers: { ...headers, ...extraHeaders } });
@@ -13,8 +17,18 @@ const json = (body: unknown, status = 200, extraHeaders: Record<string, string> 
 export default async (req: Request, context: Context) => {
   const store = getFixtureStore(context);
   const action = new URL(req.url).searchParams.get("action");
-  if (req.method === "GET" && action === "offer-public") return json(publicOffer((await store.get("offer", { type: "json" })) || DEFAULT_OFFER));
-  if (req.method === "GET" && !action) return json(normaliseFixtureData((await store.get("current", { type: "json" })) || EMPTY));
+  if (req.method === "GET" && action === "display-public") {
+    const [fixtureData, offerData] = await Promise.all([
+      store.get("current", { type: "json" }),
+      store.get("offer", { type: "json" })
+    ]);
+    return json({
+      fixtures: normaliseFixtureData(fixtureData || EMPTY),
+      offer: publicOffer(offerData || DEFAULT_OFFER)
+    }, 200, publicHeaders);
+  }
+  if (req.method === "GET" && action === "offer-public") return json(publicOffer((await store.get("offer", { type: "json" })) || DEFAULT_OFFER), 200, publicHeaders);
+  if (req.method === "GET" && !action) return json(normaliseFixtureData((await store.get("current", { type: "json" })) || EMPTY), 200, publicHeaders);
 
   const expected = Netlify.env.get("ADMIN_PASSWORD");
   if (req.method === "DELETE") return json({ ok: true }, 200, { "Set-Cookie": clearSessionCookie() });

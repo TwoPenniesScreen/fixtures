@@ -1,5 +1,13 @@
 export const FALLBACK_DATA = { fixtures: [], updatedAt: null };
 
+export async function fetchWithTimeout(input, options = {}, timeout = 15_000) {
+  if (typeof AbortController !== "function") return fetch(input, options);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try { return await fetch(input, { ...options, signal: controller.signal }); }
+  finally { clearTimeout(timer); }
+}
+
 const COMPETITION_LOGOS = {
   "premier-league": "/assets/competitions/premier-league.png",
   "champions-league": "/assets/competitions/champions-league.png",

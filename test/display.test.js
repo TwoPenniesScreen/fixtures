@@ -14,6 +14,7 @@ test("unchanged data does not redraw and updates wait until the slide is hidden"
   let poll;
   let pollDelay;
   let currentData = fixtureData("Liverpool");
+  let storageFails = false;
   const listeners = {};
   const target = {
     get innerHTML() { return html; },
@@ -37,7 +38,10 @@ test("unchanged data does not redraw and updates wait until the slide is hidden"
     };
     globalThis.localStorage = {
       getItem: key => storage.get(key) || null,
-      setItem: (key, value) => storage.set(key, value)
+      setItem: (key, value) => {
+        if (storageFails) throw new Error("Storage unavailable");
+        storage.set(key, value);
+      }
     };
     globalThis.fetch = async () => ({ ok: true, json: async () => currentData });
     globalThis.setInterval = (callback, delay) => { poll = callback; pollDelay = delay; return 1; };
@@ -49,6 +53,7 @@ test("unchanged data does not redraw and updates wait until the slide is hidden"
     assert.equal(redraws, 1);
 
     currentData = fixtureData("Bournemouth");
+    storageFails = true;
     await poll();
     assert.equal(redraws, 1);
     assert.doesNotMatch(html, /BOURNEMOUTH/);
@@ -56,6 +61,11 @@ test("unchanged data does not redraw and updates wait until the slide is hidden"
     globalThis.document.hidden = true;
     listeners.visibilitychange();
     await settle();
+    assert.equal(redraws, 2);
+    assert.match(html, /BOURNEMOUTH/);
+
+    currentData = { fixtures: "not-an-array" };
+    await poll();
     assert.equal(redraws, 2);
     assert.match(html, /BOURNEMOUTH/);
   } finally {
