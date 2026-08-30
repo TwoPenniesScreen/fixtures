@@ -28,6 +28,12 @@ export default async (req: Request, context: Context) => {
     }, 200, publicHeaders);
   }
   if (req.method === "GET" && action === "offer-public") return json(publicOffer((await store.get("offer", { type: "json" })) || DEFAULT_OFFER), 200, publicHeaders);
+  if (req.method === "GET" && action === "logo") {
+    const id = new URL(req.url).searchParams.get("id") || "";
+    const meta = await store.get(`offer-logo/${id}/meta`, { type: "json" }) as any;
+    const data = meta && await store.get(`offer-logo/${id}/original/${meta.sha256}`, { type: "arrayBuffer" });
+    return data ? new Response(data, { headers: { "Content-Type": meta.contentType, "Cache-Control": "public, max-age=31536000, immutable" } }) : json({ error: "Logo not found" }, 404);
+  }
   if (req.method === "GET" && !action) return json(normaliseFixtureData((await store.get("current", { type: "json" })) || EMPTY), 200, publicHeaders);
 
   const expected = Netlify.env.get("ADMIN_PASSWORD");
@@ -47,6 +53,18 @@ export default async (req: Request, context: Context) => {
   }
   if (req.method !== "PUT") return json({ error: "Method not allowed" }, 405);
   try {
+    if (action === "logo") {
+      const { dataUrl } = await req.json() as any;
+      const match = /^data:(image\/(?:png|jpeg|webp));base64,([a-z0-9+/=]+)$/i.exec(dataUrl || "");
+      if (!match) throw new Error("Use a PNG, JPEG or WebP logo");
+      const bytes = Uint8Array.from(atob(match[2]), char => char.charCodeAt(0));
+      if (bytes.byteLength > 750_000) throw new Error("Keep the logo under 750 KB");
+      const image = inspectLogo(bytes); const sha256 = await digest(bytes); const id = `logo-${crypto.randomUUID()}`;
+      await store.set(`offer-logo/${id}/original/${sha256}`, bytes.buffer, { metadata: image });
+      await store.setJSON(`offer-logo/${id}/meta`, { id, sha256, ...image, createdAt: new Date().toISOString() });
+      const original = `/api/fixtures?action=logo&id=${encodeURIComponent(id)}`;
+      return json({ id, originalSrc: original, src: `/.netlify/images?url=${encodeURIComponent(original)}&w=600&fit=contain&fm=webp&q=82`, ...image });
+    }
     if (action === "offer") {
       const savedOffer = validateOffer(await req.json());
       await store.setJSON("offer", savedOffer);
@@ -78,6 +96,16 @@ function validateFixture(value: any) {
 }
 
 export const config: Config = { path: "/api/fixtures" };
+
+async function digest(bytes: Uint8Array) { return [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map(value => value.toString(16).padStart(2, "0")).join(""); }
+function inspectLogo(bytes: Uint8Array) {
+  const png = bytes.length >= 24 && bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71;
+  const jpeg = bytes.length >= 3 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255;
+  const webp = bytes.length >= 12 && String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" && String.fromCharCode(...bytes.slice(8, 12)) === "WEBP";
+  if (!png && !jpeg && !webp) throw new Error("The uploaded file is not a valid image");
+  if (png) { const width = new DataView(bytes.buffer, bytes.byteOffset + 16, 4).getUint32(0); const height = new DataView(bytes.buffer, bytes.byteOffset + 20, 4).getUint32(0); if (!width || !height || width * height > 1_440_000) throw new Error("Logo dimensions are too large"); return { contentType: "image/png", width, height, transparency: true }; }
+  return { contentType: jpeg ? "image/jpeg" : "image/webp", width: 0, height: 0, transparency: webp };
+}
 
 function readCookie(req: Request, name: string) {
   const cookies = req.headers.get("cookie") || "";

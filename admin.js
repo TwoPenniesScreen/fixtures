@@ -294,13 +294,14 @@ $("#offer-add-logo").onclick = async () => {
   const name = nameInput.value.trim();
   if (!name) return alert("Give the drink logo a name.");
   try {
-    const src = await readLogoFile(fileInput.files[0]);
+    const dataUrl = await readLogoFile(fileInput.files[0]);
+    const uploaded = await request("PUT", { dataUrl }, "logo");
     const existing = offer.logos.find(logo => logo.name.toLowerCase() === name.toLowerCase());
     if (!existing && offer.logos.length >= 12) throw new Error("The logo bank can hold up to 12 drinks.");
     const id = existing?.id || logoId(name);
     const logos = existing
-      ? offer.logos.map(logo => logo.id === id ? { id, name, src } : logo)
-      : [...offer.logos, { id, name, src }];
+      ? offer.logos.map(logo => logo.id === id ? { id, name, src: uploaded.src, originalSrc: uploaded.originalSrc, assetId: uploaded.id } : logo)
+      : [...offer.logos, { id, name, src: uploaded.src, originalSrc: uploaded.originalSrc, assetId: uploaded.id }];
     offer = normaliseOffer({ ...offerFromForm(), logos, selectedLogoId: id });
     nameInput.value = "";
     fileInput.value = "";
