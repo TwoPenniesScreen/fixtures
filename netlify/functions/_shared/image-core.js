@@ -1,0 +1,11 @@
+// Kept in sync with the tested parser used by the sibling upcoming-events app.
+const MAX_PIXELS = 1_440_000;
+export function inspectImage(bytes) {
+  const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes); const ascii = (start, length) => String.fromCharCode(...data.slice(start, start + length));
+  if (data.length >= 24 && ascii(0, 8) === "\x89PNG\r\n\x1a\n") return checked("image/png", new DataView(data.buffer, data.byteOffset + 16, 4).getUint32(0), new DataView(data.buffer, data.byteOffset + 20, 4).getUint32(0), true);
+  if (data.length >= 30 && ascii(0, 4) === "RIFF" && ascii(8, 4) === "WEBP") { const kind = ascii(12, 4); let width = 0, height = 0; if (kind === "VP8X") { width = 1 + data[24] + (data[25] << 8) + (data[26] << 16); height = 1 + data[27] + (data[28] << 8) + (data[29] << 16); } else if (kind === "VP8 ") { width = new DataView(data.buffer, data.byteOffset + 26, 2).getUint16(0, true) & 0x3fff; height = new DataView(data.buffer, data.byteOffset + 28, 2).getUint16(0, true) & 0x3fff; } else if (kind === "VP8L") { const bits = data[21] | (data[22] << 8) | (data[23] << 16) | (data[24] << 24); width = (bits & 0x3fff) + 1; height = ((bits >> 14) & 0x3fff) + 1; } return checked("image/webp", width, height, kind === "VP8X" && Boolean(data[20] & 0x10)); }
+  if (data.length >= 4 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff) for (let i = 2; i + 9 < data.length;) { if (data[i] !== 0xff) { i++; continue; } const marker = data[i + 1], size = (data[i + 2] << 8) + data[i + 3]; if (size < 2 || i + 2 + size > data.length) break; if ([0xc0,0xc1,0xc2,0xc3,0xc5,0xc6,0xc7,0xc9,0xca,0xcb,0xcd,0xce,0xcf].includes(marker)) return checked("image/jpeg", (data[i + 7] << 8) + data[i + 8], (data[i + 5] << 8) + data[i + 6], false); i += 2 + size; }
+  throw new Error("The file is not a valid JPEG, PNG or WebP image");
+}
+function checked(contentType, width, height, transparency) { if (!width || !height || width * height > MAX_PIXELS) throw new Error("Image dimensions must be valid and no larger than 1200 × 1200 pixels"); return { contentType, width, height, transparency }; }
+export const validAssetId = value => /^logo-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value));

@@ -48,7 +48,8 @@ function normaliseLogo(value) {
   const src = clean(value.src, "", 1_100_000);
   const local = /^\/assets\/drinks\/[a-z0-9._-]+$/i.test(src);
   const embedded = /^data:image\/(?:png|webp|jpeg);base64,[a-z0-9+/=]+$/i.test(src) && src.length <= 1_100_000;
-  return id && name && (local || embedded) ? { id, name, src } : null;
+  const asset = /^\/\.netlify\/images\?url=%2Fapi%2Ffixtures/i.test(src);
+  return id && name && (local || embedded || asset) ? { id, name, src, ...(asset && typeof value.originalSrc === "string" ? { originalSrc: clean(value.originalSrc, "", 500), assetId: clean(value.assetId, "", 80) } : {}) } : null;
 }
 
 function clean(value, fallback, max) {

@@ -13,7 +13,7 @@ export const DEFAULT_OFFER = Object.freeze({
 
 export function normaliseOffer(value = {}) {
   const logos = (Array.isArray(value.logos) && value.logos.length ? value.logos : DEFAULT_OFFER.logos)
-    .map(logo => ({ id: String(logo.id || ""), name: String(logo.name || ""), src: String(logo.src || "") }))
+    .map(logo => ({ id: String(logo.id || ""), name: String(logo.name || ""), src: String(logo.src || ""), originalSrc: String(logo.originalSrc || "") }))
     .filter(logo => logo.id && logo.name && logo.src);
   const requestedLogoId = String(value.selectedLogoId || "").trim();
   const selectedLogoId = logos.some(logo => logo.id === requestedLogoId) ? requestedLogoId : logos[0]?.id || "";
@@ -99,7 +99,7 @@ export function renderOfferScreen(target, fixtures = [], offerValue = DEFAULT_OF
   const logoImg = document.createElement("img");
   logoImg.className = "offer-drink-logo";
   logoImg.alt = logo?.name || offer.drinkName;
-  if (logo?.src) logoImg.src = logo.src;
+  if (logo?.src) { logoImg.src = logo.src; if (logo.originalSrc) logoImg.onerror = () => { logoImg.onerror = null; logoImg.src = logo.originalSrc; }; }
   logoImg.hidden = mode === "disabled" || !logo?.src;
   target.append(logoImg);
 
