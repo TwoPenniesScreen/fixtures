@@ -3,6 +3,7 @@ import { applyAdminUpdate, normaliseCompetitionKey, normaliseFixtureData } from 
 import { syncCalendar } from "./_shared/sync-calendar.ts";
 import { getFixtureStore } from "./_shared/store.ts";
 import { DEFAULT_OFFER, normaliseOffer, publicOffer, validateOffer } from "./_shared/offer.js";
+import { inspectImage, validAssetId } from "./_shared/image-core.js";
 
 const EMPTY = { fixtures: [], updatedAt: null };
 const headers = { "Content-Type": "application/json", "Cache-Control": "no-store" };
@@ -30,6 +31,7 @@ export default async (req: Request, context: Context) => {
   if (req.method === "GET" && action === "offer-public") return json(publicOffer((await store.get("offer", { type: "json" })) || DEFAULT_OFFER), 200, publicHeaders);
   if (req.method === "GET" && action === "logo") {
     const id = new URL(req.url).searchParams.get("id") || "";
+    if (!validAssetId(id)) return json({ error: "Logo not found" }, 404);
     const meta = await store.get(`offer-logo/${id}/meta`, { type: "json" }) as any;
     const data = meta && await store.get(`offer-logo/${id}/original/${meta.sha256}`, { type: "arrayBuffer" });
     return data ? new Response(data, { headers: { "Content-Type": meta.contentType, "Cache-Control": "public, max-age=31536000, immutable" } }) : json({ error: "Logo not found" }, 404);
@@ -59,11 +61,17 @@ export default async (req: Request, context: Context) => {
       if (!match) throw new Error("Use a PNG, JPEG or WebP logo");
       const bytes = Uint8Array.from(atob(match[2]), char => char.charCodeAt(0));
       if (bytes.byteLength > 750_000) throw new Error("Keep the logo under 750 KB");
-      const image = inspectLogo(bytes); const sha256 = await digest(bytes); const id = `logo-${crypto.randomUUID()}`;
+      const image = inspectImage(bytes); const sha256 = await digest(bytes); const id = `logo-${crypto.randomUUID()}`;
       await store.set(`offer-logo/${id}/original/${sha256}`, bytes.buffer, { metadata: image });
       await store.setJSON(`offer-logo/${id}/meta`, { id, sha256, ...image, createdAt: new Date().toISOString() });
       const original = `/api/fixtures?action=logo&id=${encodeURIComponent(id)}`;
       return json({ id, originalSrc: original, src: `/.netlify/images?url=${encodeURIComponent(original)}&w=600&fit=contain&fm=webp&q=82`, ...image });
+    }
+    if (action === "logo-delete") {
+      const id = String((await req.json() as any).id || ""); if (!validAssetId(id)) throw new Error("Invalid logo");
+      const offer = normaliseOffer((await store.get("offer", { type: "json" })) || DEFAULT_OFFER);
+      if (offer.logos.some((logo: any) => logo.assetId === id)) return json({ error: "Logo is still in use" }, 409);
+      return json({ ok: true });
     }
     if (action === "offer") {
       const savedOffer = validateOffer(await req.json());
@@ -98,7 +106,7 @@ function validateFixture(value: any) {
 export const config: Config = { path: "/api/fixtures" };
 
 async function digest(bytes: Uint8Array) { return [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map(value => value.toString(16).padStart(2, "0")).join(""); }
-function inspectLogo(bytes: Uint8Array) {
+function inspectLogoUnused(bytes: Uint8Array) {
   const png = bytes.length >= 24 && bytes[0] === 137 && bytes[1] === 80 && bytes[2] === 78 && bytes[3] === 71;
   const jpeg = bytes.length >= 3 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255;
   const webp = bytes.length >= 12 && String.fromCharCode(...bytes.slice(0, 4)) === "RIFF" && String.fromCharCode(...bytes.slice(8, 12)) === "WEBP";
