@@ -4,7 +4,7 @@
 body { margin:0; color:var(--ink); background:#050505; font-family:Arial, sans-serif; }
 .display-page { width:100vw; height:100vh; overflow:hidden; display:grid; place-items:center; background:#000; }
 .display-page .fixture-screen { width:min(100vw, 177.7778vh); height:min(100vh, 56.25vw); }
-.fixture-screen { position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; container-type:inline-size; background:#000 url("/assets/background.jpg") center/100% 100% no-repeat; color:white; isolation:isolate; }
+.fixture-screen { position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; container-type:inline-size; background:#000 url("/assets/background.jpg") center/100% 100% no-repeat; background:#000 image-set(url("/assets/background.webp") type("image/webp"), url("/assets/background.jpg") type("image/jpeg")) center/100% 100% no-repeat; color:white; isolation:isolate; }
 .featured { position:absolute; left:51%; right:3.5%; top:10.7%; text-align:center; }
 .fixture { font-family:RobotoDisplay,Arial,sans-serif; text-align:center; text-transform:uppercase; }
 .teams { display:flex; flex-direction:column; align-items:center; }
