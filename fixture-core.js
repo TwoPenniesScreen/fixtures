@@ -60,11 +60,21 @@ export function selectFixtures(fixtures, now = new Date()) {
   return { featured, upcoming: eligible.filter(f => !featured || f.id !== featured.id).slice(0, 3) };
 }
 
-export function formatWhen(fixture) {
+export function formatWhen(fixture, now = new Date()) {
   if (fixture.dateMode === "window" || !fixture.time) return "TBC";
-  const date = new Date(`${fixture.date}T12:00:00`);
-  const bits = new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" }).format(date).replace(",", "").toUpperCase();
+  const today = londonCalendarDate(now);
+  if (fixture.date === today) return `TODAY ${fixture.time}`;
+  if (fixture.date === addCalendarDays(today, 1)) return `TOMORROW ${fixture.time}`;
+  const date = new Date(`${fixture.date}T12:00:00Z`);
+  const bits = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", weekday: "short", day: "numeric", month: "short" }).format(date).replace(",", "").toUpperCase();
   return `${bits} ${fixture.time}`;
+}
+
+export function londonCalendarDate(instant = new Date()) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(instant).filter(part => part.type !== "literal").map(part => [part.type, part.value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
 export function renderScreen(target, data, now = new Date()) {
@@ -73,13 +83,13 @@ export function renderScreen(target, data, now = new Date()) {
     target.innerHTML = `<section class="fallback-message" aria-label="Every televised Toon game"><span>EVERY TELEVISED</span><strong>TOON GAME</strong></section>`;
     return;
   }
-  target.innerHTML = `<section class="featured">${fixtureMarkup(featured, true)}</section><section class="upcoming count-${upcoming.length}">${upcoming.map(f => fixtureMarkup(f, false)).join("")}</section>`;
+  target.innerHTML = `<section class="featured">${fixtureMarkup(featured, true, now)}</section><section class="upcoming count-${upcoming.length}">${upcoming.map(f => fixtureMarkup(f, false, now)).join("")}</section>`;
 }
 
-function fixtureMarkup(f, featured) {
+function fixtureMarkup(f, featured, now) {
   const teams = f.venue === "away" ? [tidyName(f.opponent), "NEWCASTLE"] : ["NEWCASTLE", tidyName(f.opponent)];
   const competition = escapeHtml(f.competition || "other");
-  return `<article class="fixture ${featured ? "fixture-featured" : "fixture-small"}"><div class="teams"><strong>${escapeHtml(teams[0])}</strong><b>V</b><strong>${escapeHtml(teams[1])}</strong></div><div class="competition competition-${competition}" aria-label="${escapeHtml(competition.replaceAll("-", " "))}">${competitionLogo(f.competition)}</div><time>${formatWhen(f)}</time></article>`;
+  return `<article class="fixture ${featured ? "fixture-featured" : "fixture-small"}"><div class="teams"><strong>${escapeHtml(teams[0])}</strong><b>V</b><strong>${escapeHtml(teams[1])}</strong></div><div class="competition competition-${competition}" aria-label="${escapeHtml(competition.replaceAll("-", " "))}">${competitionLogo(f.competition)}</div><time>${formatWhen(f, now)}</time></article>`;
 }
 
 function competitionLogo(competition) {
@@ -88,3 +98,8 @@ function competitionLogo(competition) {
 }
 
 function escapeHtml(value) { const d = document.createElement("div"); d.textContent = value; return d.innerHTML; }
+
+function addCalendarDays(date, days) {
+  const [year, month, day] = date.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10);
+}

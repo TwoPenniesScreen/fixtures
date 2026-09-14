@@ -1,4 +1,4 @@
-import { FALLBACK_DATA, fetchWithTimeout, renderScreen } from "./fixture-core.js";
+import { FALLBACK_DATA, fetchWithTimeout, londonCalendarDate, renderScreen } from "./fixture-core.js";
 
 const CACHE_KEY = "two-pennies-fixtures-v1";
 const REFRESH_INTERVAL = 15 * 60 * 1000;
@@ -6,6 +6,7 @@ const target = document.querySelector("#display");
 const connection = document.querySelector("#connection");
 let latestData;
 let renderedSignature = null;
+let renderedDate = null;
 let waitingForFirstFixtureData;
 let refreshPending = false;
 
@@ -24,16 +25,20 @@ function isFixtureData(data) {
   return Boolean(data && typeof data === "object" && Array.isArray(data.fixtures));
 }
 
-function fixtureSignature(data) {
-  return JSON.stringify(data.fixtures || []);
+function fixtureSignature(data, date) {
+  return `${date}:${JSON.stringify(data.fixtures || [])}`;
 }
 
 function draw(data, { allowVisible = false, force = false } = {}) {
-  const signature = fixtureSignature(data);
+  const now = new Date();
+  const date = londonCalendarDate(now);
+  const signature = fixtureSignature(data, date);
   if (!force && signature === renderedSignature) return;
-  if (!allowVisible && !document.hidden && renderedSignature !== null) return;
-  renderScreen(target, data);
+  const dateChanged = renderedDate !== null && date !== renderedDate;
+  if (!allowVisible && !dateChanged && !document.hidden && renderedSignature !== null) return;
+  renderScreen(target, data, now);
   renderedSignature = signature;
+  renderedDate = date;
 }
 
 async function refresh() {
