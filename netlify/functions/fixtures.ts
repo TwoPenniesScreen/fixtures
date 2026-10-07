@@ -9,7 +9,7 @@ const EMPTY = { fixtures: [], updatedAt: null };
 const headers = { "Content-Type": "application/json", "Cache-Control": "no-store" };
 const publicHeaders = {
   "Cache-Control": "public, max-age=0, must-revalidate",
-  "Netlify-CDN-Cache-Control": "public, durable, max-age=60, must-revalidate"
+  "Netlify-CDN-Cache-Control": "public, durable, s-maxage=600, stale-while-revalidate=60"
 };
 const SESSION_COOKIE = "fixtures_admin";
 const SESSION_SECONDS = 60 * 60 * 24 * 30;
